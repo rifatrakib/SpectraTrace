@@ -15,6 +15,7 @@ class SignupRequestSchema(BaseRequestSchema, UserBase):
         regex=r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).{8,64}$",
         min_length=8,
         max_length=64,
+        example="Admin@12345",
     )
 
 
@@ -24,10 +25,12 @@ class LoginRequestSchema(BaseRequestSchema):
         description="Username of the user to login.",
         min_length=1,
         max_length=64,
+        example="admin",
     )
     password: str = Field(
         title="password",
         description="Password of the user to login.",
         min_length=1,
         max_length=64,
+        example="Admin@12345",
     )

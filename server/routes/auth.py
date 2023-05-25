@@ -7,7 +7,7 @@ from server.database.users.auth import activate_user_account, authenticate_user,
 from server.schemas.base import MessageResponseSchema
 from server.schemas.inc.auth import LoginRequestSchema, SignupRequestSchema
 from server.schemas.out.auth import TokenResponseSchema
-from server.security.dependencies.auth import get_database_session
+from server.security.dependencies.auth import get_database_session, login_request_form, signup_request_form
 from server.security.token import create_jwt
 from server.utils.enums import Tags
 from server.utils.generators import create_temporary_activation_url
@@ -23,8 +23,8 @@ router = APIRouter(prefix="/auth", tags=[Tags.authentication])
     status_code=status.HTTP_201_CREATED,
 )
 async def register(
-    payload: SignupRequestSchema,
     request: Request,
+    payload: SignupRequestSchema = Depends(signup_request_form),
     session: Session = Depends(get_database_session),
 ) -> MessageResponseSchema:
     try:
@@ -43,7 +43,7 @@ async def register(
     status_code=status.HTTP_202_ACCEPTED,
 )
 async def login(
-    payload: LoginRequestSchema,
+    payload: LoginRequestSchema = Depends(login_request_form),
     session: Session = Depends(get_database_session),
 ) -> TokenResponseSchema:
     try:
@@ -86,7 +86,7 @@ async def activate_account(
 )
 async def resend_activation_key(
     request: Request,
-    email: EmailStr = Query(description="Email address of user."),
+    email: EmailStr = Query(description="Email address of user.", example="admin@spectratrace.com"),
     session: Session = Depends(get_database_session),
 ) -> MessageResponseSchema:
     try:

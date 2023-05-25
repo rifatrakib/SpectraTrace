@@ -8,11 +8,13 @@ class UserBase(BaseModel):
             Unique username containing letters, numbers, and
             any of (., _, -, @) in between 6 to 32 characters.
         """,
-        regex=r"^[\w.@_-]{6,32}$",
-        min_length=6,
+        regex=r"^[\w.@_-]{5,32}$",
+        min_length=5,
         max_length=32,
+        example="admin",
     )
     email: EmailStr = Field(
         title="email",
         decription="Unique email that can be used for user account activation.",
+        example="admin@spectratrace.io",
     )
