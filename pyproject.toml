@@ -9,6 +9,15 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.9"
 fastapi = {extras = ["all"], version = "^0.95.2"}
+pydantic = {extras = ["dotenv", "email"], version = "^1.10.8"}
+sqlmodel = "^0.0.8"
+python-decouple = "^3.8"
+psycopg2 = "^2.9.6"
+redis = "^4.5.5"
+pydash = "^7.0.3"
+python-jose = {extras = ["cryptography"], version = "^3.3.0"}
+passlib = {extras = ["bcrypt"], version = "^1.7.4"}
+typer = "^0.9.0"
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^3.3.2"

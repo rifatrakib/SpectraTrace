@@ -1,0 +1,46 @@
+version: "3.9"
+
+services:
+  rds:
+    container_name: postgresql
+    image: postgres:latest
+    env_file:
+      - configurations/.env.staging
+    volumes:
+      - pgdata:/var/lib/postgresql/data/
+    ports:
+      - "5432:5432"
+    restart: on-failure
+
+  redis:
+    container_name: redis
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+      - redisconfig:/etc/redis
+    restart: on-failure
+
+  api:
+    container_name: http-api
+    build:
+      context: .
+      dockerfile: Dockerfile
+    working_dir: /server
+    command: uvicorn server.main:app --host 0.0.0.0 --port 8000 --reload
+    env_file:
+      - configurations/.env.staging
+    volumes:
+      - .:/server
+    ports:
+      - "8000:8000"
+    restart: on-failure
+    depends_on:
+      - redis
+      - rds
+
+volumes:
+  pgdata:
+  redisdata:
+  redisconfig:
