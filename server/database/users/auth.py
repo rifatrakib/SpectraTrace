@@ -5,6 +5,7 @@ from server.config.factory import settings
 from server.models.users import UserAccount
 from server.schemas.inc.auth import SignupRequestSchema
 from server.security.authentication import pwd_context
+from server.utils.generators import generate_random_key
 from server.utils.messages import (
     raise_400_bad_request,
     raise_401_unauthorized,
@@ -20,6 +21,7 @@ def create_user_account(payload: SignupRequestSchema) -> UserAccount:
         username=payload.username,
         email=payload.email,
         hashed_password=hashed_password,
+        access_key=generate_random_key(),
     )
 
     try:

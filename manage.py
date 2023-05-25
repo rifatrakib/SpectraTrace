@@ -37,10 +37,13 @@ def stop_containers(drop_volumes: bool = False):
     subprocess.run(command, shell=True)
 
 
-@app.command(name="rebuild-api-image")
+@app.command(name="build")
 def rebuild_api_image():
+    prep = "poetry export -f requirements.txt --output requirements.txt --without-hashes"
+    subprocess.run(prep, shell=True)
     subprocess.run("docker build . -t spectratrace-api", shell=True)
     subprocess.run('docker image prune --force --filter "dangling=true"', shell=True)
+    subprocess.run("rm requirements.txt", shell=True)
 
 
 if __name__ == "__main__":
