@@ -14,7 +14,7 @@ def generate_random_key() -> str:
     return hashed_code.hexdigest()
 
 
-def create_temporary_activation_url(user: UserAccount, base_url: HttpUrl) -> HttpUrl:
+def create_temporary_activation_url(user: UserAccount, url: HttpUrl) -> HttpUrl:
     key = generate_random_key()
     cache_data(key=key, data=user.json(), ttl=60)
-    return f"{base_url}auth/activate?key={key}"
+    return f"{url}?key={key}"

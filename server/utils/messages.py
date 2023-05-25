@@ -1,3 +1,5 @@
+from typing import Dict
+
 from fastapi import HTTPException, status
 
 
@@ -15,10 +17,11 @@ def raise_401_unauthorized(message: str = "Not authorized") -> HTTPException:
     )
 
 
-def raise_403_forbidden(message: str = "Forbidden") -> HTTPException:
+def raise_403_forbidden(message: str = "Forbidden", headers: Dict[str, str] = {}) -> HTTPException:
     return HTTPException(
         status_code=status.HTTP_403_FORBIDDEN,
         detail={"msg": message},
+        headers=headers,
     )
 
 

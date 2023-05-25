@@ -6,7 +6,7 @@ class UserBase(BaseModel):
         title="username",
         decription="""
             Unique username containing letters, numbers, and
-            any of (., _, -, @) in between 6 to 32 characters.
+            any of (., _, -, @) in between 5 to 32 characters.
         """,
         regex=r"^[\w.@_-]{5,32}$",
         min_length=5,

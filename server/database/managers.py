@@ -35,6 +35,15 @@ def cache_data(*, key: str, data: Any, ttl: Union[int, None] = None) -> None:
     client.set(key, data, ex=ttl)
 
 
+def is_in_cache(*, key: str) -> Union[List[Dict[str, Any]], Dict[str, Any]]:
+    try:
+        client: Redis = get_redis_client()
+        if client.exists(key):
+            return True
+    except Exception:
+        raise raise_410_gone(message="Token expired or invalid.")
+
+
 def activate_from_cache(*, key: str) -> Union[List[Dict[str, Any]], Dict[str, Any]]:
     try:
         client: Redis = get_redis_client()

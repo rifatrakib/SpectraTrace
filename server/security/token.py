@@ -31,6 +31,7 @@ def decode_jwt(token: str) -> TokenUser:
             id=payload.get("id"),
             username=payload.get("username"),
             email=payload.get("email"),
+            is_active=payload.get("is_active"),
         )
     except JWTError as token_decode_error:
         raise ValueError("unable to decode JWT") from token_decode_error

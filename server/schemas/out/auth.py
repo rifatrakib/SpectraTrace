@@ -11,6 +11,10 @@ class TokenUser(BaseAPISchema, UserBase):
         title="user ID",
         decription="Unique ID that can be used to distinguish between users.",
     )
+    is_active: bool = Field(
+        title="user active status",
+        decription="A boolean value to indicate whether user is active or not.",
+    )
 
 
 class TokenData(TokenUser):
