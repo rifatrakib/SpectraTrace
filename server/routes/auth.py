@@ -7,7 +7,8 @@ from server.database.users.auth import activate_user_account, authenticate_user,
 from server.schemas.base import MessageResponseSchema
 from server.schemas.inc.auth import LoginRequestSchema, SignupRequestSchema
 from server.schemas.out.auth import TokenResponseSchema
-from server.security.dependencies.auth import get_database_session, login_request_form, signup_request_form
+from server.security.dependencies.auth import login_request_form, signup_request_form
+from server.security.dependencies.sessions import get_database_session
 from server.security.token import create_jwt
 from server.utils.enums import Tags
 from server.utils.generators import create_temporary_activation_url

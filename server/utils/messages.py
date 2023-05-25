@@ -34,3 +34,10 @@ def raise_410_gone(message: str = "Gone") -> HTTPException:
         status_code=status.HTTP_410_GONE,
         detail={"msg": message},
     )
+
+
+def raise_422_unprocessable_entity(message: str = "Unprocessable entity") -> HTTPException:
+    return HTTPException(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        detail={"msg": message},
+    )
