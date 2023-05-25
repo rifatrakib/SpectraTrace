@@ -6,7 +6,7 @@ from pydantic import BaseModel, EmailStr
 
 from server.schemas.inc.auth import LoginRequestSchema, PasswordChangeRequestSchema, SignupRequestSchema
 from server.schemas.out.auth import TokenUser
-from server.security.token import decode_jwt
+from server.security.auth.token import decode_jwt
 from server.utils.messages import raise_403_forbidden, raise_422_unprocessable_entity
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")

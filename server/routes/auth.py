@@ -14,6 +14,7 @@ from server.database.users.auth import (
 from server.schemas.base import MessageResponseSchema
 from server.schemas.inc.auth import LoginRequestSchema, PasswordChangeRequestSchema, SignupRequestSchema
 from server.schemas.out.auth import TokenResponseSchema, TokenUser
+from server.security.auth.token import create_jwt
 from server.security.dependencies.auth import (
     is_user_active,
     login_request_form,
@@ -22,7 +23,6 @@ from server.security.dependencies.auth import (
     signup_request_form,
 )
 from server.security.dependencies.sessions import get_database_session
-from server.security.token import create_jwt
 from server.utils.enums import Tags
 from server.utils.generators import create_temporary_activation_url
 from server.utils.messages import raise_410_gone

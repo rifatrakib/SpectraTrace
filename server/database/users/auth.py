@@ -4,7 +4,7 @@ from sqlmodel import Session, select
 
 from server.models.users import UserAccount
 from server.schemas.inc.auth import PasswordChangeRequestSchema, SignupRequestSchema
-from server.security.authentication import pwd_context
+from server.security.auth.authentication import pwd_context
 from server.utils.generators import generate_random_key
 from server.utils.messages import (
     raise_400_bad_request,
