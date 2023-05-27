@@ -46,5 +46,12 @@ def rebuild_api_image():
     subprocess.run("rm requirements.txt", shell=True)
 
 
+@app.command(name="run-tests")
+def run_tests():
+    subprocess.run("coverage run -m pytest", shell=True)
+    subprocess.run("coverage report", shell=True)
+    subprocess.run("coverage html", shell=True)
+
+
 if __name__ == "__main__":
     app()
