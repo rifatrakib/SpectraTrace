@@ -22,8 +22,15 @@ router = APIRouter(
     response_model=UserResponseSchema,
     status_code=status.HTTP_200_OK,
 )
-async def read_current_user(current_user: TokenUser = Depends(is_user_active)):
-    return current_user
+async def read_current_user(
+    current_user: TokenUser = Depends(is_user_active),
+    session: Session = Depends(get_database_session),
+):
+    try:
+        user = read_user_by_id(session=session, user_id=current_user.id)
+        return user
+    except HTTPException as e:
+        raise e
 
 
 @router.get(
