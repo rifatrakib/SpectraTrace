@@ -14,11 +14,11 @@ class SettingsFactory:
         self.mode = mode
 
     def __call__(self) -> Type[BaseConfig]:
-        if self.mode == "staging":  # pragma: no cover
+        if self.mode == "staging":
             return StagingConfig()
         elif self.mode == "production":
             return ProductionConfig()
-        else:  # pragma: no cover
+        else:
             return DevelopmentConfig()
 
 
