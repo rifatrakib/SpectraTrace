@@ -3,7 +3,7 @@ from sqlmodel import Session
 
 from server.database.users.user import read_user_by_id
 from server.schemas.out.auth import TokenUser
-from server.schemas.out.user import UserResponseSchema
+from server.schemas.out.user import UserAccessKeyResponseSchema, UserResponseSchema
 from server.security.dependencies.auth import is_user_active
 from server.security.dependencies.sessions import get_database_session
 from server.utils.enums import Tags
@@ -39,6 +39,24 @@ async def read_single_user(
 ):
     try:
         user = read_user_by_id(session=session, user_id=user_id)
+        return user
+    except HTTPException as e:
+        raise e
+
+
+@router.get(
+    "/access-key/me",
+    summary="Get current user access key",
+    description="Get current user access key",
+    response_model=UserAccessKeyResponseSchema,
+    status_code=status.HTTP_200_OK,
+)
+async def read_current_user_access_key(
+    current_user: TokenUser = Depends(is_user_active),
+    session: Session = Depends(get_database_session),
+):
+    try:
+        user = read_user_by_id(session=session, user_id=current_user.id)
         return user
     except HTTPException as e:
         raise e

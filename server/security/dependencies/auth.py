@@ -38,7 +38,6 @@ async def decode_user_token(
 async def is_user_active(
     user: TokenUser = Depends(decode_user_token),
 ):
-    print("here")
     if not user.is_active:
         raise raise_403_forbidden(message="Inactive user")
     return user
