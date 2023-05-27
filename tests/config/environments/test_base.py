@@ -45,48 +45,6 @@ class TestBaseConfig:
             config.RDS_URI == "postgresql://test_user:test_password@localhost:5432/test_db"  # pragma: allowlist secret
         )
 
-    def test_rds_uri_returns_default_uri(self):
-        """Tests that the RDS_URI property returns a default URI when required
-        variables are missing."""
-        config = BaseConfig(
-            APP_NAME="test_app",
-            POSTGRES_HOST=None,
-            POSTGRES_PORT=None,
-            POSTGRES_USER=None,
-            POSTGRES_PASSWORD=None,
-            POSTGRES_DB=None,
-            REDIS_HOST="localhost",
-            REDIS_PORT=6379,
-            JWT_SECRET_KEY="test_secret",  # pragma: allowlist secret
-            JWT_SUBJECT="test_subject",
-            JWT_ALGORITHM="HS256",
-            JWT_MIN=30,
-            JWT_HOUR=1,
-            JWT_DAY=1,
-        )
-        assert config.RDS_URI == "sqlite:///database.db"
-
-    def test_optional_vars_not_present(self):
-        """Tests that the RDS_URI property returns the default URI when none of
-        the optional environment variables are present."""
-        config = BaseConfig(
-            APP_NAME="test_app",
-            POSTGRES_HOST=None,
-            POSTGRES_PORT=None,
-            POSTGRES_USER=None,
-            POSTGRES_PASSWORD=None,
-            POSTGRES_DB=None,
-            REDIS_HOST="localhost",
-            REDIS_PORT=6379,
-            JWT_SECRET_KEY="test_secret",  # pragma: allowlist secret
-            JWT_SUBJECT="test_subject",
-            JWT_ALGORITHM="HS256",
-            JWT_MIN=30,
-            JWT_HOUR=1,
-            JWT_DAY=1,
-        )
-        assert config.RDS_URI == "sqlite:///database.db"
-
     def test_config_loads_env_vars(self):
         configs = {}
         with open("configurations/.env", "r") as reader:

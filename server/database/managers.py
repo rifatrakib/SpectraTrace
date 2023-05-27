@@ -11,12 +11,7 @@ from server.utils.messages import raise_410_gone
 
 
 def create_db_and_tables() -> None:
-    if "sqlite" in settings.RDS_URI:
-        connect_args = {"check_same_thread": False}
-        engine = create_engine(settings.RDS_URI, echo=True, connect_args=connect_args)
-    else:
-        engine = create_engine(settings.RDS_URI, echo=True)
-
+    engine = create_engine(settings.RDS_URI, echo=True)
     UserTables.metadata.create_all(engine)
 
 

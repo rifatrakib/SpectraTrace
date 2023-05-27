@@ -1,6 +1,4 @@
-from typing import Union
-
-from pydantic import BaseSettings, Extra, Field
+from pydantic import BaseSettings, Extra
 
 
 class RootConfig(BaseSettings):
@@ -14,11 +12,11 @@ class BaseConfig(RootConfig):
     APP_NAME: str
 
     # SQL Database Configurations
-    POSTGRES_HOST: Union[str, None] = Field(default=None)
-    POSTGRES_PORT: Union[str, None] = Field(default=None)
-    POSTGRES_USER: Union[str, None] = Field(default=None)
-    POSTGRES_PASSWORD: Union[str, None] = Field(default=None)
-    POSTGRES_DB: Union[str, None] = Field(default=None)
+    POSTGRES_HOST: str
+    POSTGRES_PORT: str
+    POSTGRES_USER: str
+    POSTGRES_PASSWORD: str
+    POSTGRES_DB: str
 
     # Cache Servers Configurations
     REDIS_HOST: str
@@ -42,7 +40,4 @@ class BaseConfig(RootConfig):
         host = self.POSTGRES_HOST
         port = self.POSTGRES_PORT
         db_name = self.POSTGRES_DB
-
-        if not all([username, password, host, port, db_name]):
-            return "sqlite:///database.db"
         return f"postgresql://{username}:{password}@{host}:{port}/{db_name}"

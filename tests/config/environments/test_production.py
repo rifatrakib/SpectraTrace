@@ -43,32 +43,6 @@ class TestProductionConfig:
         assert config.DEBUG is False
         assert config.MODE == "production"
 
-    def test_setting_optional_configurations_to_none(self):
-        """Tests setting optional configurations to None."""
-        config = ProductionConfig(
-            APP_NAME="test_app",
-            POSTGRES_HOST=None,
-            POSTGRES_PORT=None,
-            POSTGRES_USER=None,
-            POSTGRES_PASSWORD=None,
-            POSTGRES_DB=None,
-            REDIS_HOST="localhost",
-            REDIS_PORT=6379,
-            JWT_SECRET_KEY="test_secret_key",  # pragma: allowlist secret
-            JWT_SUBJECT="test_subject",
-            JWT_ALGORITHM="HS256",
-            JWT_MIN=30,
-            JWT_HOUR=1,
-            JWT_DAY=1,
-        )
-
-        assert config.POSTGRES_HOST is None
-        assert config.POSTGRES_PORT is None
-        assert config.POSTGRES_USER is None
-        assert config.POSTGRES_PASSWORD is None
-        assert config.POSTGRES_DB is None
-        assert config.RDS_URI == "sqlite:///database.db"
-
     def test_loading_environment_variables_from_env_file(self, monkeypatch):
         """Tests loading environment variables from `configurations/.env`
         file."""
