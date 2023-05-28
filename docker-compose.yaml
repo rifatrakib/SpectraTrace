@@ -22,6 +22,15 @@ services:
       - redisconfig:/etc/redis
     restart: on-failure
 
+  influxdb:
+    container_name: influxdb
+    image: influxdb:latest
+    ports:
+      - "8086:8086"
+    volumes:
+      - influxdata:/var/lib/influxdb
+    restart: on-failure
+
   api:
     container_name: http-api
     build:
@@ -44,3 +53,4 @@ volumes:
   pgdata:
   redisdata:
   redisconfig:
+  influxdata:
