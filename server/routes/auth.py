@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from pydantic import EmailStr
-from sqlmodel import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from server.database.managers import activate_from_cache, is_in_cache
 from server.database.users.auth import (
@@ -41,10 +41,10 @@ router = APIRouter(prefix="/auth", tags=[Tags.authentication])
 async def register(
     request: Request,
     payload: SignupRequestSchema = Depends(signup_request_form),
-    session: Session = Depends(get_database_session),
+    session: AsyncSession = Depends(get_database_session),
 ) -> MessageResponseSchema:
     try:
-        new_user = create_user_account(session=session, payload=payload)
+        new_user = await create_user_account(session=session, payload=payload)
         url = create_temporary_activation_url(new_user, f"{request.base_url}auth/activate")
         return {"msg": f"Account created. Activate your account using {url}."}
     except HTTPException as e:
@@ -60,10 +60,10 @@ async def register(
 )
 async def login(
     payload: LoginRequestSchema = Depends(login_request_form),
-    session: Session = Depends(get_database_session),
+    session: AsyncSession = Depends(get_database_session),
 ) -> TokenResponseSchema:
     try:
-        user = authenticate_user(
+        user = await authenticate_user(
             session=session,
             username=payload.username,
             password=payload.password,
@@ -83,11 +83,11 @@ async def login(
 )
 async def activate_account(
     key: str = Query(description="Activation key."),
-    session: Session = Depends(get_database_session),
+    session: AsyncSession = Depends(get_database_session),
 ) -> MessageResponseSchema:
     try:
         user = activate_from_cache(key=key)
-        updated_user = activate_user_account(session=session, user_id=user["id"])
+        updated_user = await activate_user_account(session=session, user_id=user["id"])
         return {"msg": f"User account {updated_user.username} activated."}
     except HTTPException as e:
         raise e
@@ -103,10 +103,10 @@ async def activate_account(
 async def resend_activation_key(
     request: Request,
     email: EmailStr = Depends(email_input_field),
-    session: Session = Depends(get_database_session),
+    session: AsyncSession = Depends(get_database_session),
 ) -> MessageResponseSchema:
     try:
-        user = read_user_by_email(session=session, email=email)
+        user = await read_user_by_email(session=session, email=email)
         url = create_temporary_activation_url(user, f"{request.base_url}auth/activate")
         return {"msg": f"Activation key resent. Activate your account using {url}."}
     except HTTPException as e:
@@ -123,10 +123,10 @@ async def resend_activation_key(
 async def change_password(
     user: TokenUser = Depends(is_user_active),
     payload: PasswordChangeRequestSchema = Depends(password_change_request_form),
-    session: Session = Depends(get_database_session),
+    session: AsyncSession = Depends(get_database_session),
 ):
     try:
-        user = update_password(session=session, user_id=user.id, payload=payload)
+        user = await update_password(session=session, user_id=user.id, payload=payload)
         return {"msg": "Password changed."}
     except HTTPException as e:
         raise e
@@ -142,10 +142,10 @@ async def change_password(
 async def forgot_password(
     request: Request,
     email: EmailStr = Depends(email_input_field),
-    session: Session = Depends(get_database_session),
+    session: AsyncSession = Depends(get_database_session),
 ) -> MessageResponseSchema:
     try:
-        user = read_user_by_email(session=session, email=email)
+        user = await read_user_by_email(session=session, email=email)
         url = create_temporary_activation_url(user, f"{request.base_url}auth/password/reset")
         return {"msg": f"Activation key resent. Activate your account using {url}."}
     except HTTPException as e:
@@ -177,12 +177,12 @@ async def is_reset_password_route_valid(key: str = Query(description="Activation
 )
 async def reset_password(
     key: str = Query(description="Activation key."),
-    session: Session = Depends(get_database_session),
+    session: AsyncSession = Depends(get_database_session),
     new_password: str = Depends(password_reset_request_form),
 ) -> MessageResponseSchema:
     try:
         user = activate_from_cache(key=key)
-        updated_user = reset_user_password(session=session, user_id=user["id"], new_password=new_password)
+        updated_user = await reset_user_password(session=session, user_id=user["id"], new_password=new_password)
         return {"msg": f"User account {updated_user.username} reset password successful."}
     except HTTPException as e:
         raise e

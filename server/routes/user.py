@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from pydantic import EmailStr
-from sqlmodel import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from server.database.managers import activate_from_cache
 from server.database.users.user import read_user_by_id, update_user_access_key
@@ -29,10 +29,10 @@ router = APIRouter(
 )
 async def read_current_user(
     current_user: TokenUser = Depends(is_user_active),
-    session: Session = Depends(get_database_session),
+    session: AsyncSession = Depends(get_database_session),
 ):
     try:
-        user = read_user_by_id(session=session, user_id=current_user.id)
+        user = await read_user_by_id(session=session, user_id=current_user.id)
         return user
     except HTTPException as e:
         raise e
@@ -47,10 +47,10 @@ async def read_current_user(
 )
 async def read_single_user(
     user_id: int,
-    session: Session = Depends(get_database_session),
+    session: AsyncSession = Depends(get_database_session),
 ):
     try:
-        user = read_user_by_id(session=session, user_id=user_id)
+        user = await read_user_by_id(session=session, user_id=user_id)
         return user
     except HTTPException as e:
         raise e
@@ -65,10 +65,10 @@ async def read_single_user(
 )
 async def read_current_user_access_key(
     current_user: TokenUser = Depends(is_user_active),
-    session: Session = Depends(get_database_session),
+    session: AsyncSession = Depends(get_database_session),
 ):
     try:
-        user = read_user_by_id(session=session, user_id=current_user.id)
+        user = await read_user_by_id(session=session, user_id=current_user.id)
         return user
     except HTTPException as e:
         raise e
@@ -104,12 +104,12 @@ async def forgot_user_access_key(
 )
 async def reset_user_access_key(
     key: str = Query(description="Activation key."),
-    session: Session = Depends(get_database_session),
+    session: AsyncSession = Depends(get_database_session),
 ):
     # TODO: NEED TO REMOVE ANY EXISTING ACCESS KEY FROM CACHE
     try:
         user = activate_from_cache(key=key)
-        updated_user = update_user_access_key(session=session, user_id=user["id"])
+        updated_user = await update_user_access_key(session=session, user_id=user["id"])
         return {"msg": f"User account {updated_user.username} reset access key successful."}
     except HTTPException as e:
         raise e

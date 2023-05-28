@@ -44,6 +44,8 @@ class TestBaseConfig:
         assert (
             config.RDS_URI == "postgresql://test_user:test_password@localhost:5432/test_db"  # pragma: allowlist secret
         )
+        async_uri = "postgresql+asyncpg://test_user:test_password@localhost:5432/test_db"  # pragma: allowlist secret
+        assert config.RDS_URI_ASYNC == async_uri
 
     def test_config_loads_env_vars(self):
         configs = {}

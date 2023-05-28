@@ -41,3 +41,8 @@ class BaseConfig(RootConfig):
         port = self.POSTGRES_PORT
         db_name = self.POSTGRES_DB
         return f"postgresql://{username}:{password}@{host}:{port}/{db_name}"
+
+    @property
+    def RDS_URI_ASYNC(self) -> str:
+        uri = self.RDS_URI
+        return uri.replace("postgresql://", "postgresql+asyncpg://")

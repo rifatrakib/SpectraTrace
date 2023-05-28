@@ -1,6 +1,7 @@
 from pydantic import EmailStr
 from sqlalchemy.exc import IntegrityError
-from sqlmodel import Session, select
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlmodel import select
 
 from server.models.users import UserAccount
 from server.schemas.inc.auth import PasswordChangeRequestSchema, SignupRequestSchema
@@ -14,7 +15,7 @@ from server.utils.messages import (
 )
 
 
-def create_user_account(session: Session, payload: SignupRequestSchema) -> UserAccount:
+async def create_user_account(session: AsyncSession, payload: SignupRequestSchema) -> UserAccount:
     hashed_password = pwd_context.hash_plain_password(payload.password)
     user = UserAccount(
         username=payload.username,
@@ -25,15 +26,17 @@ def create_user_account(session: Session, payload: SignupRequestSchema) -> UserA
 
     try:
         session.add(user)
-        session.commit()
-        session.refresh(user)
+        await session.commit()
+        await session.refresh(user)
         return user
     except IntegrityError:
         raise raise_400_bad_request(message=f"The username {payload.username} is already registered.")
 
 
-def authenticate_user(session: Session, username: str, password: str) -> UserAccount:
-    user = session.exec(select(UserAccount).where(UserAccount.username == username)).first()
+async def authenticate_user(session: AsyncSession, username: str, password: str) -> UserAccount:
+    stmt = select(UserAccount).where(UserAccount.username == username)
+    query = await session.execute(stmt)
+    user = query.scalar()
 
     if not user:
         raise raise_404_not_found(message=f"The username {username} is not registered.")
@@ -47,43 +50,52 @@ def authenticate_user(session: Session, username: str, password: str) -> UserAcc
     return user
 
 
-def activate_user_account(session: Session, user_id: int) -> UserAccount:
-    user = session.get(UserAccount, user_id)
+async def activate_user_account(session: AsyncSession, user_id: int) -> UserAccount:
+    stmt = select(UserAccount).where(UserAccount.id == user_id)
+    query = await session.execute(stmt)
+    user = query.scalar()
     user.is_active = True
     session.add(user)
-    session.commit()
-    session.refresh(user)
+    await session.commit()
+    await session.refresh(user)
     return user
 
 
-def read_user_by_email(session: Session, email: EmailStr) -> UserAccount:
-    user = session.exec(select(UserAccount).where(UserAccount.email == email)).first()
+async def read_user_by_email(session: AsyncSession, email: EmailStr) -> UserAccount:
+    stmt = select(UserAccount).where(UserAccount.email == email)
+    query = await session.execute(stmt)
+    user = query.scalar()
+
     if not user:
         raise raise_404_not_found(message=f"{email} is not registered.")
     return user
 
 
-def update_password(
-    session: Session,
+async def update_password(
+    session: AsyncSession,
     user_id: int,
     payload: PasswordChangeRequestSchema,
 ) -> UserAccount:
-    user = session.get(UserAccount, user_id)
+    stmt = select(UserAccount).where(UserAccount.id == user_id)
+    query = await session.execute(stmt)
+    user = query.scalar()
 
     if not pwd_context.verify_password(payload.current_password, user.hashed_password):
         raise raise_401_unauthorized(message="Incorrect password.")
 
     user.hashed_password = pwd_context.hash_plain_password(payload.new_password)
     session.add(user)
-    session.commit()
-    session.refresh(user)
+    await session.commit()
+    await session.refresh(user)
     return user
 
 
-def reset_user_password(session: Session, user_id: int, new_password: str) -> UserAccount:
-    user = session.get(UserAccount, user_id)
+async def reset_user_password(session: AsyncSession, user_id: int, new_password: str) -> UserAccount:
+    stmt = select(UserAccount).where(UserAccount.id == user_id)
+    query = await session.execute(stmt)
+    user = query.scalar()
     user.hashed_password = pwd_context.hash_plain_password(new_password)
     session.add(user)
-    session.commit()
-    session.refresh(user)
+    await session.commit()
+    await session.refresh(user)
     return user
