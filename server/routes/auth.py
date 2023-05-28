@@ -16,6 +16,7 @@ from server.schemas.inc.auth import LoginRequestSchema, PasswordChangeRequestSch
 from server.schemas.out.auth import TokenResponseSchema, TokenUser
 from server.security.auth.token import create_jwt
 from server.security.dependencies.auth import (
+    email_input_field,
     is_user_active,
     login_request_form,
     password_change_request_form,
@@ -92,7 +93,7 @@ async def activate_account(
         raise e
 
 
-@router.get(
+@router.post(
     "/activate/resend",
     summary="Resend activation key",
     description="Resend activation key to a user.",
@@ -101,7 +102,7 @@ async def activate_account(
 )
 async def resend_activation_key(
     request: Request,
-    email: EmailStr = Query(description="Email address of user.", example="admin@spectratrace.io"),
+    email: EmailStr = Depends(email_input_field),
     session: Session = Depends(get_database_session),
 ) -> MessageResponseSchema:
     try:
@@ -140,8 +141,8 @@ async def change_password(
 )
 async def forgot_password(
     request: Request,
+    email: EmailStr = Depends(email_input_field),
     session: Session = Depends(get_database_session),
-    email: EmailStr = Query(description="Email address of user.", example="admin@spectratrace.io"),
 ) -> MessageResponseSchema:
     try:
         user = read_user_by_email(session=session, email=email)

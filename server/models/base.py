@@ -21,5 +21,5 @@ class BaseSQLTable(SQLModel, BaseModelConfig):
     created_at: datetime = Field(default_factory=datetime.utcnow)
     last_updated_at: Union[datetime, None] = Field(
         default=None,
-        sa_column_kwargs={"onupdate": text("current_timestamp(0)")},
+        sa_column_kwargs={"onupdate": text("current_timestamp(3)")},
     )
