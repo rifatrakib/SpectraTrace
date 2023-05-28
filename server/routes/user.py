@@ -106,6 +106,7 @@ async def reset_user_access_key(
     key: str = Query(description="Activation key."),
     session: Session = Depends(get_database_session),
 ):
+    # TODO: NEED TO REMOVE ANY EXISTING ACCESS KEY FROM CACHE
     try:
         user = activate_from_cache(key=key)
         updated_user = update_user_access_key(session=session, user_id=user["id"])
