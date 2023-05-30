@@ -17,7 +17,7 @@ def run_api_server(mode: str = "development"):
     uvicorn.run("server.main:app", host="0.0.0.0", port=8000, reload=True)
 
 
-@app.command(name="run-containers")
+@app.command(name="start")
 def run_containers(show_logs: bool = True):
     command = "docker compose up"
 
@@ -27,12 +27,12 @@ def run_containers(show_logs: bool = True):
     subprocess.run(command, shell=True)
 
 
-@app.command(name="stop-containers")
+@app.command(name="stop")
 def stop_containers(drop_volumes: bool = False):
-    command = "docker compose down"
-
     if drop_volumes:
-        command = f"{command} --volumes"
+        command = "docker compose down --volumes"
+    else:
+        command = "docker compose stop"
 
     subprocess.run(command, shell=True)
 

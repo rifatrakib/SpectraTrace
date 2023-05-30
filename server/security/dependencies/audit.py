@@ -22,13 +22,13 @@ def verify_api_key(
     return api_key
 
 
-def verify_user_access(
+async def verify_user_access(
     api_key: str = Depends(verify_api_key),
     session: Session = Depends(get_database_session),
 ) -> None:
     try:
         if not is_in_cache(key=api_key):
-            user = check_user_access_key(session, api_key)
+            user = await check_user_access_key(session, api_key)
             cache_data(key=api_key, data=user.json())
     except HTTPException as e:
         raise e

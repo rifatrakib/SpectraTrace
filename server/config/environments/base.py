@@ -30,6 +30,13 @@ class BaseConfig(RootConfig):
     JWT_HOUR: int
     JWT_DAY: int
 
+    # InfluxDB Configurations
+    INFLUXDB_HOST: str
+    INFLUXDB_PORT: int
+    INFLUXDB_USER: str
+    INFLUXDB_PASSWORD: str
+    INFLUXDB_ORG: str
+
     class Config:
         env_file = "configurations/.env"
 

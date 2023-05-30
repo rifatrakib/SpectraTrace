@@ -27,6 +27,8 @@ services:
     image: influxdb:latest
     ports:
       - "8086:8086"
+    env_file:
+      - configurations/.env.staging
     volumes:
       - influxdata:/var/lib/influxdb
     restart: on-failure
@@ -47,6 +49,7 @@ services:
     restart: on-failure
     depends_on:
       - redis
+      - influxdb
       - rds
 
 volumes:
