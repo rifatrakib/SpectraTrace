@@ -1,7 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from influxdb_client import InfluxDBClient
 from pydantic import EmailStr
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from server.database.audit.auth import create_user_bucket
 from server.database.managers import activate_from_cache, is_in_cache
 from server.database.users.auth import (
     activate_user_account,
@@ -23,7 +25,7 @@ from server.security.dependencies.auth import (
     password_reset_request_form,
     signup_request_form,
 )
-from server.security.dependencies.sessions import get_database_session
+from server.security.dependencies.sessions import get_database_session, get_influxdb_client
 from server.utils.enums import Tags
 from server.utils.generators import create_temporary_activation_url
 from server.utils.messages import raise_410_gone
@@ -84,9 +86,11 @@ async def login(
 async def activate_account(
     key: str = Query(description="Activation key."),
     session: AsyncSession = Depends(get_database_session),
+    influx_client: InfluxDBClient = Depends(get_influxdb_client),
 ) -> MessageResponseSchema:
     try:
         user = activate_from_cache(key=key)
+        create_user_bucket(client=influx_client, user=user)
         updated_user = await activate_user_account(session=session, user_id=user["id"])
         return {"msg": f"User account {updated_user.username} activated."}
     except HTTPException as e:
