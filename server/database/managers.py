@@ -47,3 +47,12 @@ def activate_from_cache(*, key: str) -> Union[List[Dict[str, Any]], Dict[str, An
         return data
     except Exception:
         raise raise_410_gone(message="Token expired or invalid.")
+
+
+def read_from_cache(*, key: str) -> Union[List[Dict[str, Any]], Dict[str, Any]]:
+    try:
+        client: Redis = get_redis_client()
+        data = json.loads(client.get(key).decode("utf-8"))
+        return data
+    except Exception:
+        raise raise_410_gone(message="Token expired or invalid.")
