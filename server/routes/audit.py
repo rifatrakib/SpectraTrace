@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Any, Dict, List, Union
 
 from fastapi import APIRouter, Body, Depends, HTTPException, status
 from influxdb_client import InfluxDBClient
@@ -26,7 +26,10 @@ router = APIRouter(
 async def log_audit_event(
     current_user: Dict[str, Any] = Depends(verify_user_access),
     influx_client: InfluxDBClient = Depends(get_influxdb_client),
-    event_data: AuditRequestSchema = Body(title="Audit Event", description="Audit event to be logged"),
+    event_data: Union[AuditRequestSchema, List[AuditRequestSchema]] = Body(
+        title="Audit Event",
+        description="Audit event to be logged",
+    ),
 ):
     try:
         add_new_point_to_bucket(

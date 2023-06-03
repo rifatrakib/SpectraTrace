@@ -1,4 +1,5 @@
 import json
+from typing import List, Union
 
 from influxdb_client import InfluxDBClient, Point
 from influxdb_client.client.write_api import SYNCHRONOUS
@@ -6,7 +7,12 @@ from influxdb_client.client.write_api import SYNCHRONOUS
 from server.schemas.inc.audit import AuditRequestSchema
 
 
-def create_influxdb_point(data: AuditRequestSchema) -> Point:
+def create_influxdb_point(
+    data: Union[AuditRequestSchema, List[AuditRequestSchema]],
+) -> Union[Point, List[Point]]:
+    if isinstance(data, list):
+        return [create_influxdb_point(item) for item in data]
+
     return (
         Point(data.category)
         .tag("application", data.source_information.application)
@@ -31,7 +37,11 @@ def create_influxdb_point(data: AuditRequestSchema) -> Point:
     )
 
 
-def add_new_point_to_bucket(client: InfluxDBClient, bucket: str, data: AuditRequestSchema) -> None:
+def add_new_point_to_bucket(
+    client: InfluxDBClient,
+    bucket: str,
+    data: Union[AuditRequestSchema, List[AuditRequestSchema]],
+) -> None:
     point: Point = create_influxdb_point(data)
     with client:
         write_api = client.write_api(write_options=SYNCHRONOUS)
