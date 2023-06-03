@@ -13,7 +13,7 @@ def create_influxdb_point(
     if isinstance(data, list):
         return [create_influxdb_point(item) for item in data]
 
-    return (
+    point = (
         Point(data.category)
         .tag("application", data.source_information.application)
         .tag("environment", data.source_information.environment)
@@ -24,17 +24,29 @@ def create_influxdb_point(
         .field("event_name", data.event.name)
         .field("event_type", data.event.type)
         .field("event_stage", data.event.stage)
+        .field("event_duration", data.event.total_duration)
+        .field("affected_resources", data.event.affected_resources)
+        .field("latency", data.event.latency)
+        .field("cpu_usage", data.event.cpu_usage)
+        .field("memory_usage", data.event.memory_usage)
         .field("event_description", data.event.description)
         .field("event_detail", json.dumps(data.event.detail))
         .field("actor_origin", str(data.actor.origin))
         .field("actor_detail", json.dumps(data.actor.detail))
-        .field("resource_id", data.resource.id)
-        .field("resource_name", data.resource.name)
-        .field("resource_type", data.resource.type)
-        .field("resource_detail", json.dumps(data.resource.detail))
-        .field("metadata", json.dumps(data.metadata))
-        .time(data.timestamp)
     )
+
+    resources = [resource.dict() for resource in data.resources]
+    point.field("resources", json.dumps(resources))
+
+    metadata = {}
+    for item in data.metadata:
+        if item.is_metric:
+            point.field(item.name, item.value)
+        else:
+            metadata[item.name] = item.value
+
+    point.field("metadata", json.dumps(metadata))
+    return point.time(data.timestamp)
 
 
 def add_new_point_to_bucket(

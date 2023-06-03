@@ -4,7 +4,6 @@ from fastapi import APIRouter, Body, Depends, HTTPException, status
 from influxdb_client import InfluxDBClient
 
 from server.database.audit.points import add_new_point_to_bucket
-from server.schemas.base import MessageResponseSchema
 from server.schemas.inc.audit import AuditRequestSchema
 from server.security.dependencies.audit import verify_user_access
 from server.security.dependencies.sessions import get_influxdb_client
@@ -18,10 +17,9 @@ router = APIRouter(
 
 @router.post(
     "/log",
-    summary="Log an audit event",
-    description="Log an audit event",
-    response_model=MessageResponseSchema,
-    status_code=status.HTTP_201_CREATED,
+    summary="Log audit event",
+    description="Log one or more audit event(s)",
+    status_code=status.HTTP_204_NO_CONTENT,
 )
 async def log_audit_event(
     current_user: Dict[str, Any] = Depends(verify_user_access),
@@ -37,6 +35,5 @@ async def log_audit_event(
             bucket=current_user["username"],
             data=event_data,
         )
-        return {"msg": "Audit event logged."}
     except HTTPException as e:
         raise e
