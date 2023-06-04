@@ -5,6 +5,7 @@ from sqlmodel import Session, create_engine, select
 
 from server.config.factory import settings
 from server.database.managers import create_db_and_tables, ping_redis_server
+from server.docs.manager import read_api_metadata, read_tags_metadata
 from server.models.users import UserAccount
 from server.routes.audit import router as audit_router
 from server.routes.auth import router as auth_router
@@ -14,7 +15,10 @@ from server.security.auth.authentication import pwd_context
 from server.utils.enums import Tags
 from server.utils.generators import generate_random_key
 
-app = FastAPI()
+app = FastAPI(
+    **read_api_metadata(),
+    openapi_tags=read_tags_metadata(),
+)
 
 
 def influxdb_onboarding(base_url, user, password, organization):
