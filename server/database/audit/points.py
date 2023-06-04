@@ -58,3 +58,16 @@ def add_new_point_to_bucket(
     with client:
         write_api = client.write_api(write_options=SYNCHRONOUS)
         write_api.write(bucket=bucket, record=point)
+
+
+def read_points_from_bucket(
+    client: InfluxDBClient,
+    organization: str,
+    bucket: str,
+    measurement: str,
+) -> List[Point]:
+    query = f'from(bucket: "{bucket}") |> range(start: -1d) |> filter(fn: (r) => r._measurement == "{measurement}")'
+    with client:
+        query_api = client.query_api()
+        result = query_api.query(query=query, org=organization)
+        return list(result)

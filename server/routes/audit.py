@@ -3,7 +3,8 @@ from typing import Any, Dict, List, Union
 from fastapi import APIRouter, Body, Depends, HTTPException, status
 from influxdb_client import InfluxDBClient
 
-from server.database.audit.points import add_new_point_to_bucket
+from server.config.factory import settings
+from server.database.audit.points import add_new_point_to_bucket, read_points_from_bucket
 from server.schemas.inc.audit import AuditRequestSchema
 from server.security.dependencies.audit import verify_user_access
 from server.security.dependencies.sessions import get_influxdb_client
@@ -35,5 +36,26 @@ async def log_audit_event(
             bucket=current_user["username"],
             data=event_data,
         )
+    except HTTPException as e:
+        raise e
+
+
+@router.get(
+    "/log",
+    summary="Read log audit events",
+    description="Read audit events from the audit log",
+)
+async def read_logs(
+    current_user: Dict[str, Any] = Depends(verify_user_access),
+    influx_client: InfluxDBClient = Depends(get_influxdb_client),
+):
+    try:
+        data = read_points_from_bucket(
+            client=influx_client,
+            organization=settings.INFLUXDB_ORG,
+            bucket=current_user["username"],
+            measurement="audit",
+        )
+        return data
     except HTTPException as e:
         raise e
