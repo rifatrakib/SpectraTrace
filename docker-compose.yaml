@@ -52,8 +52,21 @@ services:
       - influxdb
       - rds
 
+  rabbitmq:
+    container_name: rabbitmq
+    image: rabbitmq:latest
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmqdata:/var/lib/rabbitmq
+    restart: on-failure
+    depends_on:
+      - api
+
 volumes:
   pgdata:
   redisdata:
   redisconfig:
   influxdata:
+  rabbitmqdata:
