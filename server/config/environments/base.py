@@ -37,6 +37,12 @@ class BaseConfig(RootConfig):
     INFLUXDB_PASSWORD: str
     INFLUXDB_ORG: str
 
+    # RabbitMQ Configurations
+    RABBITMQ_HOST: str
+    RABBITMQ_PORT: int
+    RABBITMQ_DEFAULT_USER: str
+    RABBITMQ_DEFAULT_PASS: str
+
     class Config:
         env_file = "configurations/.env"
 
@@ -53,3 +59,11 @@ class BaseConfig(RootConfig):
     def RDS_URI_ASYNC(self) -> str:
         uri = self.RDS_URI
         return uri.replace("postgresql://", "postgresql+asyncpg://")
+
+    @property
+    def RABBITMQ_URI(self) -> str:
+        username = self.RABBITMQ_DEFAULT_USER
+        password = self.RABBITMQ_DEFAULT_PASS
+        host = self.RABBITMQ_HOST
+        port = self.RABBITMQ_PORT
+        return f"amqp://{username}:{password}@{host}:{port}"
