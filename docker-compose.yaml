@@ -54,7 +54,7 @@ services:
 
   rabbitmq:
     container_name: rabbitmq
-    image: rabbitmq:latest
+    image: rabbitmq:management-alpine
     ports:
       - "5672:5672"
       - "15672:15672"
@@ -65,6 +65,18 @@ services:
     restart: on-failure
     depends_on:
       - api
+
+  queue:
+    container_name: queue
+    build: ./queue
+    user: nobody
+    env_file:
+      - configurations/.env.staging
+    depends_on:
+      - api
+      - influxdb
+      - rabbitmq
+    restart: on-failure
 
 volumes:
   pgdata:
