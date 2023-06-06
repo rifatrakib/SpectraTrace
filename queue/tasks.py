@@ -8,7 +8,10 @@ from helpers.push import add_new_point_to_bucket
 from influxdb_client import InfluxDBClient
 from pydantic import parse_obj_as
 
-app = Celery("tasks", broker=settings.RABBITMQ_URI, backend="rpc://")
+app = Celery("tasks", broker=settings.BROKER_URI, backend=settings.BROKER_URI)
+app.conf.acks_on_failure_or_timeout = True
+app.conf.reject_on_worker_lost = True
+app.conf.task_acks_late = True
 
 
 @app.task()

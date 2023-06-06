@@ -52,16 +52,14 @@ services:
       - influxdb
       - rds
 
-  rabbitmq:
-    container_name: rabbitmq
-    image: rabbitmq:management-alpine
+  redis_broker:
+    container_name: redis-broker
+    image: redis:latest
     ports:
-      - "5672:5672"
-      - "15672:15672"
-    env_file:
-      - configurations/.env.staging
+      - "6380:6379"
     volumes:
-      - rabbitmqdata:/var/lib/rabbitmq
+      - redisbrokerdata:/data
+      - redisbrokerconfig:/etc/redis
     restart: on-failure
     depends_on:
       - api
@@ -73,9 +71,7 @@ services:
     env_file:
       - configurations/.env.staging
     depends_on:
-      - api
-      - influxdb
-      - rabbitmq
+      - redis_broker
     restart: on-failure
 
 volumes:
@@ -83,4 +79,5 @@ volumes:
   redisdata:
   redisconfig:
   influxdata:
-  rabbitmqdata:
+  redisbrokerdata:
+  redisbrokerconfig:

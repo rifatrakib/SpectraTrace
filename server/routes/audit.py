@@ -18,7 +18,7 @@ router = APIRouter(
     tags=[Tags.audit],
 )
 
-celery_app = Celery("worker", broker=settings.RABBITMQ_URI, backend="rpc://")
+celery_app = Celery("worker", broker=settings.BROKER_URI, backend=settings.BROKER_URI)
 
 
 @router.post(

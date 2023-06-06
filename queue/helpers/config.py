@@ -6,22 +6,18 @@ from pydantic import BaseSettings
 
 
 class BaseConfig(BaseSettings):
-    # RabbitMQ Configurations
-    RABBITMQ_HOST: str
-    RABBITMQ_PORT: int
-    RABBITMQ_DEFAULT_USER: str
-    RABBITMQ_DEFAULT_PASS: str
+    # Message Broker Configurations
+    BROKER_HOST: str
+    BROKER_PORT: int
 
     class Config:
         env_file = "configurations/.env"
 
     @property
-    def RABBITMQ_URI(self) -> str:
-        username = self.RABBITMQ_DEFAULT_USER
-        password = self.RABBITMQ_DEFAULT_PASS
-        host = self.RABBITMQ_HOST
-        port = self.RABBITMQ_PORT
-        return f"amqp://{username}:{password}@{host}:{port}"
+    def BROKER_URI(self) -> str:
+        host = self.BROKER_HOST
+        port = self.BROKER_PORT
+        return f"redis://{host}:{port}"
 
 
 class DevelopmentConfig(BaseConfig):
