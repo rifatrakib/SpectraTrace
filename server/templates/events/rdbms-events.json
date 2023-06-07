@@ -1,0 +1,42 @@
+{
+    "category": "rds_ops",
+    "source_information": {
+        "application": "spectratrace_api",
+        "environment": "staging"
+    },
+    "method": "POST",
+    "status": "",
+    "level": "",
+    "event": {
+        "id": "",
+        "name": "",
+        "type": "",
+        "stage": 0,
+        "total_duration": 0.1,
+        "affected_resources": 0.1,
+        "latency": 0.1,
+        "cpu_usage": 0.1,
+        "memory_usage": 0.1,
+        "detail": {
+            "sql": "",
+            "parameters": null
+        },
+        "description": ""
+    },
+    "actor": {
+        "origin": "spectratrace internal",
+        "detail": {
+            "location": null
+        }
+    },
+    "resources": [
+        {
+            "id": "rds",
+            "name": "PostgreSQL database",
+            "type": "database",
+            "detail": {
+                "database": ""
+            }
+        }
+    ]
+}

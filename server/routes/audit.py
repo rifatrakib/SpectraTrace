@@ -1,6 +1,5 @@
 from typing import Any, Dict, List, Union
 
-from celery import Celery
 from fastapi import APIRouter, Body, Depends, HTTPException, status
 from influxdb_client import InfluxDBClient
 
@@ -11,13 +10,12 @@ from server.schemas.inc.audit import AuditRequestSchema
 from server.security.dependencies.audit import verify_user_access
 from server.security.dependencies.sessions import get_influxdb_admin, get_influxdb_client
 from server.utils.enums import Tags
+from server.utils.tasks import publish_task
 
 router = APIRouter(
     prefix="/audit",
     tags=[Tags.audit],
 )
-
-celery_app = Celery("worker", broker=settings.BROKER_URI, backend=settings.BROKER_URI)
 
 
 @router.post(
@@ -35,20 +33,7 @@ async def log_audit_event(
     ),
 ):
     try:
-        data = []
-        if isinstance(event_data, list):
-            data = [event.dict() for event in event_data]
-        else:
-            data.append(event_data.dict())
-
-        params = {
-            "url": f"http://{settings.INFLUXDB_HOST}:{settings.INFLUXDB_PORT}",
-            "token": admin.api_token,
-            "org": settings.INFLUXDB_ORG,
-            "bucket": current_user["username"],
-            "data": data,
-        }
-        celery_app.send_task("tasks.log_event", kwargs=params)
+        publish_task(admin=admin, bucket=current_user["username"], event_data=event_data)
     except HTTPException as e:
         raise e
 
