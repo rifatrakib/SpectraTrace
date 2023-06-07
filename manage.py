@@ -27,12 +27,11 @@ def run_containers(show_logs: bool = True, build: bool = False):
     if build:
         prep = "poetry export -f requirements.txt --output requirements.txt --without-hashes"
         subprocess.run(prep, shell=True)
-        command = f"{command} --build"
-        subprocess.run(command, shell=True)
+        subprocess.run("docker compose build", shell=True)
         subprocess.run('docker image prune --force --filter "dangling=true"', shell=True)
         subprocess.run("rm requirements.txt", shell=True)
-    else:
-        subprocess.run(command, shell=True)
+
+    subprocess.run(command, shell=True)
 
 
 @app.command(name="stop")
