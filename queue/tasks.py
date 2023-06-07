@@ -1,5 +1,4 @@
-import json
-from typing import List
+from typing import Any, Dict, List
 
 from celery import Celery
 from helpers.config import settings
@@ -15,7 +14,13 @@ app.conf.task_acks_late = True
 
 
 @app.task()
-def log_event(url, token, org, bucket, data):
+def log_event(
+    url: str,
+    token: str,
+    org: str,
+    bucket: str,
+    data: List[Dict[str, Any]],
+):
     client: InfluxDBClient = InfluxDBClient(url=url, token=token, org=org)
-    data = parse_obj_as(List[AuditRequestSchema], json.loads(data))
+    data = parse_obj_as(List[AuditRequestSchema], data)
     add_new_point_to_bucket(client=client, bucket=bucket, data=data)

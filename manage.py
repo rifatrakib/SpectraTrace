@@ -18,13 +18,21 @@ def run_api_server(mode: str = "development"):
 
 
 @app.command(name="start")
-def run_containers(show_logs: bool = True):
+def run_containers(show_logs: bool = True, build: bool = False):
     command = "docker compose up"
 
     if not show_logs:
         command = f"{command} -d"
 
-    subprocess.run(command, shell=True)
+    if build:
+        prep = "poetry export -f requirements.txt --output requirements.txt --without-hashes"
+        subprocess.run(prep, shell=True)
+        command = f"{command} --build"
+        subprocess.run(command, shell=True)
+        subprocess.run('docker image prune --force --filter "dangling=true"', shell=True)
+        subprocess.run("rm requirements.txt", shell=True)
+    else:
+        subprocess.run(command, shell=True)
 
 
 @app.command(name="stop")

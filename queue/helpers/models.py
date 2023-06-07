@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Any, Dict, List, Union
 
-from pydantic import BaseModel, Extra, Field, IPvAnyAddress
+from pydantic import BaseModel, Extra, Field
 from pydash import camel_case
 
 
@@ -104,7 +104,7 @@ class EventSchema(BaseRequestSchema):
 
 
 class ActorSchema(BaseRequestSchema):
-    origin: IPvAnyAddress = Field(title="Origin", description="IP address of the origin of the event")
+    origin: str = Field(title="Origin", description="IP address of the origin of the event")
     detail: Dict[str, Any] = Field(
         default_factory=dict,
         title="User Data",

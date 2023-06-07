@@ -1,4 +1,3 @@
-import json
 from typing import Any, Dict, List, Union
 
 from celery import Celery
@@ -38,16 +37,16 @@ async def log_audit_event(
     try:
         data = []
         if isinstance(event_data, list):
-            data = [json.loads(event.json()) for event in event_data]
+            data = [event.dict() for event in event_data]
         else:
-            data.append(json.loads(event_data.json()))
+            data.append(event_data.dict())
 
         params = {
             "url": f"http://{settings.INFLUXDB_HOST}:{settings.INFLUXDB_PORT}",
             "token": admin.api_token,
             "org": settings.INFLUXDB_ORG,
             "bucket": current_user["username"],
-            "data": json.dumps(data),
+            "data": data,
         }
         celery_app.send_task("tasks.log_event", kwargs=params)
     except HTTPException as e:
