@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Union
 
 from pydantic import Field
 
@@ -13,7 +14,8 @@ class UserResponseSchema(BaseResponseSchema, UserBase):
         description="User creation date",
         example="2021-01-01T00:00:00.000000",
     )
-    last_updated_at: datetime = Field(
+    last_updated_at: Union[datetime, None] = Field(
+        default=None,
         title="User update date",
         description="User update date",
         example="2021-01-01T00:00:00.000000",

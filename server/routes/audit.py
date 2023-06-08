@@ -7,6 +7,7 @@ from server.config.factory import settings
 from server.database.audit.points import read_points_from_bucket
 from server.models.users import UserAccount
 from server.schemas.inc.audit import AuditRequestSchema
+from server.schemas.out.audit import AuditResponseSchema
 from server.security.dependencies.audit import verify_user_access
 from server.security.dependencies.auth import is_user_active
 from server.security.dependencies.sessions import get_influxdb_admin, get_influxdb_client
@@ -43,6 +44,7 @@ async def log_audit_event(
     "/log",
     summary="Read log audit events",
     description="Read audit events from the audit log",
+    response_model=List[AuditResponseSchema],
 )
 async def read_logs(
     q: str = Query(),

@@ -19,7 +19,7 @@ def proccess_points(tables: List[FluxTable]):
                 "method": values["method"],
                 "status": values["status"],
                 "level": values["level"],
-                "event_data": {
+                "event": {
                     "id": values["event_id"],
                     "name": values["event_name"],
                     "type": values["event_type"],
@@ -38,7 +38,7 @@ def proccess_points(tables: List[FluxTable]):
             }
 
             if values.get("event_detail", None):
-                item["event_data"]["detail"] = json.loads(values["event_detail"])
+                item["event"]["detail"] = json.loads(values["event_detail"])
 
             if values.get("actor_detail", None):
                 item["actor"]["detail"] = json.loads(values["actor_detail"])
