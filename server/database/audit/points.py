@@ -37,16 +37,16 @@ def proccess_points(tables: List[FluxTable]):
                 "time": values["_time"],
             }
 
-            if values["event_detail"] is not None:
+            if values.get("event_detail", None):
                 item["event_data"]["detail"] = json.loads(values["event_detail"])
 
-            if values["actor_detail"] is not None:
+            if values.get("actor_detail", None):
                 item["actor"]["detail"] = json.loads(values["actor_detail"])
 
-            if values["resources"] is not None:
-                item["resources"] = json.loads(values["resources"])
+            if values.get("resource", None):
+                item["resource"] = json.loads(values["resource"])
 
-            if values["metadata"] is not None:
+            if values.get("metadata", None):
                 metadata = {}
                 for key, value in json.loads(values["metadata"]).items():
                     try:
@@ -67,8 +67,8 @@ def read_points_from_bucket(
     measurement: str,
 ) -> List[Point]:
     query = (
-        f'from(bucket: "{bucket}") |> range(start: -1d) |> filter(fn: (r) => r._measurement == "{measurement}") |>'
-        ' pivot(rowKey:["_time"], columnKey:["_field"], valueColumn:"_value")'
+        f'from(bucket: "{bucket}") |> range(start: -1d) |> filter(fn: (r) => r._measurement == "{measurement}")'
+        '|> pivot(rowKey:["_time"], columnKey:["_field"], valueColumn:"_value")'
     )
     with client:
         query_api = client.query_api()

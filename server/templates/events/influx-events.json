@@ -8,7 +8,6 @@
     "status": "",
     "level": "",
     "event": {
-        "id": "",
         "name": "",
         "type": "",
         "stage": 0,
@@ -29,14 +28,12 @@
             "location": null
         }
     },
-    "resources": [
-        {
-            "id": "tsdb",
-            "name": "InfluxDB",
-            "type": "database",
-            "detail": {
-                "bucket": ""
-            }
+    "resource": {
+        "id": "tsdb",
+        "name": "InfluxDB",
+        "type": "database",
+        "detail": {
+            "bucket": ""
         }
-    ]
+    }
 }

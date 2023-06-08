@@ -8,6 +8,7 @@ from server.database.audit.points import read_points_from_bucket
 from server.models.users import UserAccount
 from server.schemas.inc.audit import AuditRequestSchema
 from server.security.dependencies.audit import verify_user_access
+from server.security.dependencies.auth import is_user_active
 from server.security.dependencies.sessions import get_influxdb_admin, get_influxdb_client
 from server.utils.enums import Tags
 from server.utils.tasks import publish_task
@@ -45,14 +46,14 @@ async def log_audit_event(
 )
 async def read_logs(
     q: str = Query(),
-    current_user: Dict[str, Any] = Depends(verify_user_access),
+    current_user: Dict[str, Any] = Depends(is_user_active),
     influx_client: InfluxDBClient = Depends(get_influxdb_client),
 ):
     try:
         data = read_points_from_bucket(
             client=influx_client,
             organization=settings.INFLUXDB_ORG,
-            bucket=current_user["username"],
+            bucket=current_user.username,
             measurement=q,
         )
         return data

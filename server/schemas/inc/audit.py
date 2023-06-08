@@ -38,7 +38,6 @@ class TagSchema(BaseRequestSchema):
 
 
 class EventSchema(BaseRequestSchema):
-    id: str = Field(title="Event ID", description="Unique ID of the event")
     name: str = Field(title="Event Name", description="Name of the event that was performed")
     type: str = Field(title="Event Type", description="Type of the event that was performed")
     stage: int = Field(title="Stage", description="Stage of the event in a sequence of events")
@@ -71,7 +70,6 @@ class EventSchema(BaseRequestSchema):
     class Config:
         schema_extra = {
             "example": {
-                "id": "1",
                 "name": "Login",
                 "type": "Authentication",
                 "stage": 1,
@@ -108,9 +106,9 @@ class ActorSchema(BaseRequestSchema):
 
 
 class ResourceSchema(BaseRequestSchema):
-    id: str = Field(title="Resource ID", description="Unique ID of the resource")
-    name: str = Field(title="Resource Name", description="Name of the resource")
-    type: str = Field(title="Resource Type", description="Type of the resource")
+    id: Union[str, None] = Field(default=None, title="Resource ID", description="Unique ID of the resource")
+    name: Union[str, None] = Field(default=None, title="Resource Name", description="Name of the resource")
+    type: Union[str, None] = Field(default=None, title="Resource Type", description="Type of the resource")
     detail: Dict[str, Any] = Field(
         default_factory=dict,
         title="Resource Data",
@@ -138,9 +136,9 @@ class AuditRequestSchema(BaseRequestSchema):
     level: str = Field(title="Level", description="Level of the event that was performed")
     event: EventSchema = Field(title="Event", description="Event that was performed")
     actor: ActorSchema = Field(title="Actor", description="Actor that performed the event")
-    resources: List[ResourceSchema] = Field(
-        default_factory=list,
-        title="Resources",
+    resource: ResourceSchema = Field(
+        default_factory=dict,
+        title="Resource",
         description="Resource that was affected by the event",
     )
     metadata: List[MetadataSchema] = Field(
@@ -166,7 +164,6 @@ class AuditRequestSchema(BaseRequestSchema):
                 "status": "success",
                 "level": "info",
                 "event": {
-                    "id": "1",
                     "name": "Login",
                     "type": "Authentication",
                     "stage": 1,
@@ -186,16 +183,14 @@ class AuditRequestSchema(BaseRequestSchema):
                         "username": "johndoe",
                     },
                 },
-                "resources": [
-                    {
-                        "id": "1",
-                        "name": "User",
-                        "type": "User",
-                        "detail": {
-                            "username": "johndoe",
-                        },
+                "resource": {
+                    "id": "1",
+                    "name": "User",
+                    "type": "User",
+                    "detail": {
+                        "username": "johndoe",
                     },
-                ],
+                },
                 "metadata": [
                     {
                         "is_metric": True,

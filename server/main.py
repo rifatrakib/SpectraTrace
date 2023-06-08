@@ -69,10 +69,10 @@ def influxdb_onboarding(base_url, user, password, organization):
         "server/main.py::on_startup - line 100",
         "server/main.py::admin_account_exists - line 100",
     ]
-    event_data.resources[0].detail["bucket"] = settings.INFLUXDB_USER
-    event_data.resources[0].detail["organization"] = settings.INFLUXDB_ORG
-    event_data.resources[0].detail["api_token"] = response["auth"]["token"]
-    event_data.resources[0].detail["permissions"] = response["auth"]["permissions"]
+    event_data.resource.detail["bucket"] = settings.INFLUXDB_USER
+    event_data.resource.detail["organization"] = settings.INFLUXDB_ORG
+    event_data.resource.detail["api_token"] = response["auth"]["token"]
+    event_data.resource.detail["permissions"] = response["auth"]["permissions"]
 
     return event_data
 
@@ -124,8 +124,8 @@ def create_admin_account(username, password, organization, api_token):
         "server/main.py::on_startup - line 100",
         "server/main.py::admin_account_exists - line 100",
     ]
-    event_data.resources[0].detail["database"] = settings.POSTGRES_DB
-    event_data.resources[0].detail["tables"] = ["accounts"]
+    event_data.resource.detail["database"] = settings.POSTGRES_DB
+    event_data.resource.detail["tables"] = ["accounts"]
     event_data.metadata = [
         MetadataSchema(
             is_metric=False,
@@ -167,8 +167,8 @@ def admin_account_exists(username: str) -> bool:
         "server/main.py::on_startup - line 100",
         "server/main.py::admin_account_exists - line 100",
     ]
-    event_data.resources[0].detail["database"] = settings.POSTGRES_DB
-    event_data.resources[0].detail["tables"] = ["accounts"]
+    event_data.resource.detail["database"] = settings.POSTGRES_DB
+    event_data.resource.detail["tables"] = ["accounts"]
 
     if user:
         event_data.metadata = [
@@ -199,7 +199,7 @@ def create_admin_credentials():
         return events, admin
 
     onboarding_event = influxdb_onboarding(base_url, user, password, organization)
-    api_token = onboarding_event.resources[0].detail["api_token"]
+    api_token = onboarding_event.resource.detail["api_token"]
     events.append(onboarding_event)
 
     admin_event, admin = create_admin_account(user, password, organization, api_token)
@@ -238,8 +238,8 @@ def on_startup():
         "server/main.py - line 100",
         "server/database/managers.py - line 23",
     ]
-    event_data.resources[0].detail["database"] = settings.POSTGRES_DB
-    event_data.resources[0].detail["tables"] = ["accounts"]
+    event_data.resource.detail["database"] = settings.POSTGRES_DB
+    event_data.resource.detail["tables"] = ["accounts"]
 
     startup_events.append(event_data)
     print("Relational database and tables created!")

@@ -1,8 +1,6 @@
-from typing import Any, Dict, Type
-
 from fastapi import Depends, Form
 from fastapi.security import OAuth2PasswordBearer
-from pydantic import BaseModel, EmailStr
+from pydantic import EmailStr
 
 from server.schemas.inc.auth import LoginRequestSchema, PasswordChangeRequestSchema, SignupRequestSchema
 from server.schemas.out.auth import TokenUser
@@ -10,16 +8,6 @@ from server.security.auth.token import decode_jwt
 from server.utils.messages import raise_403_forbidden, raise_422_unprocessable_entity
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
-
-
-def extract_options(
-    model: Type[BaseModel],
-    field: str,
-    updates: Dict[str, Any] = {},
-) -> Dict[str, Any]:
-    options = model.schema()["properties"][field]
-    options.update(updates)
-    return options
 
 
 async def decode_user_token(

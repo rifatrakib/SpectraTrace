@@ -1,5 +1,6 @@
 import json
 from typing import List
+from uuid import uuid4
 
 from helpers.models import AuditRequestSchema
 from influxdb_client import InfluxDBClient, Point
@@ -8,6 +9,7 @@ from influxdb_client.client.write_api import SYNCHRONOUS
 
 def create_influxdb_point(data: List[AuditRequestSchema]) -> List[Point]:
     points = []
+    event_id = str(uuid4())
 
     for index, event_data in enumerate(data):
         point = (
@@ -17,7 +19,7 @@ def create_influxdb_point(data: List[AuditRequestSchema]) -> List[Point]:
             .field("method", event_data.method)
             .field("status", event_data.status)
             .field("level", event_data.level)
-            .field("event_id", event_data.event.id)
+            .field("event_id", event_id)
             .field("event_name", event_data.event.name)
             .field("event_type", event_data.event.type)
             .field("event_stage", index + 1)
@@ -28,6 +30,9 @@ def create_influxdb_point(data: List[AuditRequestSchema]) -> List[Point]:
             .field("memory_usage", event_data.event.memory_usage)
             .field("event_description", event_data.event.description)
             .field("actor_origin", event_data.actor.origin)
+            .field("resource_id", event_data.resource.id)
+            .field("resource_name", event_data.resource.name)
+            .field("resource_type", event_data.resource.type)
         )
 
         if event_data.event.detail:
@@ -36,8 +41,8 @@ def create_influxdb_point(data: List[AuditRequestSchema]) -> List[Point]:
         if event_data.actor.detail:
             point.field("actor_detail", json.dumps(event_data.actor.detail))
 
-        resources = [resource.dict() for resource in event_data.resources]
-        point.field("resources", json.dumps(resources))
+        if event_data.resource.detail:
+            point.field("resource_detail", json.dumps(event_data.resource.detail))
 
         metadata = {}
         for item in event_data.metadata:
