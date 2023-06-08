@@ -1,6 +1,6 @@
 from typing import Any, Dict, List, Union
 
-from fastapi import APIRouter, Body, Depends, HTTPException, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
 from influxdb_client import InfluxDBClient
 
 from server.config.factory import settings
@@ -44,6 +44,7 @@ async def log_audit_event(
     description="Read audit events from the audit log",
 )
 async def read_logs(
+    q: str = Query(),
     current_user: Dict[str, Any] = Depends(verify_user_access),
     influx_client: InfluxDBClient = Depends(get_influxdb_client),
 ):
@@ -52,7 +53,7 @@ async def read_logs(
             client=influx_client,
             organization=settings.INFLUXDB_ORG,
             bucket=current_user["username"],
-            measurement="audit",
+            measurement=q,
         )
         return data
     except HTTPException as e:
