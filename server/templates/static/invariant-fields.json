@@ -1,0 +1,33 @@
+{
+    "invariant_fields": [
+        "result",
+        "table",
+        "_start",
+        "_stop",
+        "_time",
+        "_measurement",
+        "application",
+        "environment",
+        "actor_detail",
+        "actor_origin",
+        "affected_resources",
+        "cpu_usage",
+        "event_description",
+        "event_detail",
+        "event_duration",
+        "event_id",
+        "event_name",
+        "event_stage",
+        "event_type",
+        "latency",
+        "level",
+        "memory_usage",
+        "metadata",
+        "method",
+        "resource_detail",
+        "resource_id",
+        "resource_name",
+        "resource_type",
+        "status"
+    ]
+}

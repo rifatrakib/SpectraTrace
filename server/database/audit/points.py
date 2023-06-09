@@ -1,8 +1,16 @@
 import json
+from functools import lru_cache
 from typing import List
 
 from influxdb_client import InfluxDBClient, Point
 from influxdb_client.client.flux_table import FluxTable
+
+
+@lru_cache()
+def get_invariant_fields() -> List[str]:
+    with open("server/templates/static/invariant-fields.json", "r") as reader:
+        data = json.loads(reader.read())
+    return data["invariant_fields"]
 
 
 def proccess_points(tables: List[FluxTable]):
@@ -10,6 +18,8 @@ def proccess_points(tables: List[FluxTable]):
     for table in tables:
         for record in table.records:
             values = record.values
+            invariant_fields = get_invariant_fields()
+            variant_fields = list(filter(lambda x: x not in invariant_fields, values.keys()))
             item = {
                 "category": values["_measurement"],
                 "tags": {
@@ -46,15 +56,18 @@ def proccess_points(tables: List[FluxTable]):
             if values.get("resource", None):
                 item["resource"] = json.loads(values["resource"])
 
+            metadata = {}
             if values.get("metadata", None):
-                metadata = {}
                 for key, value in json.loads(values["metadata"]).items():
                     try:
                         metadata[key] = json.loads(value)
                     except ValueError:
                         metadata[key] = value
-                item["metadata"] = metadata
 
+            for key in variant_fields:
+                metadata[key] = values[key]
+
+            item["metadata"] = metadata
             result.append(item)
 
     return result

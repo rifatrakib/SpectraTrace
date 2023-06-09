@@ -24,7 +24,7 @@ class BaseRequestSchema(BaseAPISchema):
 class MetadataSchema(BaseRequestSchema):
     is_metric: bool = Field(default=False, title="Is Metric", description="Whether the event is a metric or not")
     name: str = Field(title="Name", description="Name of the metric")
-    value: Union[int, float, str, bool] = Field(title="Value", description="Value of the metric")
+    value: Any = Field(title="Value", description="Value of the metric")
 
     class Config:
         schema_extra = {
