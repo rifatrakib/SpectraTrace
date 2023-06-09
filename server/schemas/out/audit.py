@@ -40,7 +40,7 @@ class AuditResponseSchema(BaseResponseSchema):
             "example": {
                 "category": "audit",
                 "tags": {
-                    "application": "spectratrace-api",
+                    "application": "spectratrace_api",
                     "environment": "staging",
                 },
                 "method": "POST",

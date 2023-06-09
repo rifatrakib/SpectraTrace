@@ -30,7 +30,7 @@ class TagSchema(BaseRequestSchema):
     class Config:
         schema_extra = {
             "example": {
-                "application": "spectratrace-api",
+                "application": "spectratrace_api",
                 "environment": "staging",
             },
         }

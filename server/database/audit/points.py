@@ -5,6 +5,8 @@ from typing import List
 from influxdb_client import InfluxDBClient, Point
 from influxdb_client.client.flux_table import FluxTable
 
+from server.schemas.inc.audit import AuditRetrievalRequestSchema
+
 
 @lru_cache()
 def get_invariant_fields() -> List[str]:
@@ -15,10 +17,11 @@ def get_invariant_fields() -> List[str]:
 
 def proccess_points(tables: List[FluxTable]):
     result = []
+    invariant_fields = get_invariant_fields()
+
     for table in tables:
         for record in table.records:
             values = record.values
-            invariant_fields = get_invariant_fields()
             variant_fields = list(filter(lambda x: x not in invariant_fields, values.keys()))
             item = {
                 "category": values["_measurement"],
@@ -44,15 +47,13 @@ def proccess_points(tables: List[FluxTable]):
                 "actor": {
                     "origin": values["actor_origin"],
                 },
-                "time": values["_time"],
+                "timestamp": values["_time"],
             }
 
             if values.get("event_detail", None):
                 item["event"]["detail"] = json.loads(values["event_detail"])
-
             if values.get("actor_detail", None):
                 item["actor"]["detail"] = json.loads(values["actor_detail"])
-
             if values.get("resource", None):
                 item["resource"] = json.loads(values["resource"])
 
@@ -77,12 +78,24 @@ def read_points_from_bucket(
     client: InfluxDBClient,
     organization: str,
     bucket: str,
-    measurement: str,
+    parameters: AuditRetrievalRequestSchema,
 ) -> List[Point]:
-    query = (
-        f'from(bucket: "{bucket}") |> range(start: -1d) |> filter(fn: (r) => r._measurement == "{measurement}")'
-        '|> pivot(rowKey:["_time"], columnKey:["_field"], valueColumn:"_value")'
-    )
+    query = f'from(bucket: "{bucket}") |> range(start: {parameters.start}, stop: {parameters.stop})'
+
+    if parameters.category:
+        query += f'|> filter(fn: (r) => r["_measurement"] == "{parameters.category}")'
+
+    query += f' |> filter(fn: (r) => r["application"] == "{parameters.app}")'
+    query += f' |> filter(fn: (r) => r["environment"] == "{parameters.env}")'
+    query += ' |> pivot(rowKey:["_time"], columnKey:["_field"], valueColumn:"_value")'
+
+    if parameters.method:
+        query += f' |> filter(fn: (r) => r["method"] == "{parameters.method}")'
+    if parameters.status:
+        query += f' |> filter(fn: (r) => r["status"] == "{parameters.status}")'
+    if parameters.origin:
+        query += f' |> filter(fn: (r) => r["actor_origin"] == "{parameters.origin}")'
+
     with client:
         query_api = client.query_api()
         result = query_api.query(query=query, org=organization)

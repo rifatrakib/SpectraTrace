@@ -1,10 +1,11 @@
 from typing import Any, Dict, Union
 
-from fastapi import Depends, Header, HTTPException
+from fastapi import Depends, Header, HTTPException, Query
 from sqlmodel import Session
 
 from server.database.audit.auth import check_user_access_key
 from server.database.managers import cache_data, is_in_cache, read_from_cache
+from server.schemas.inc.audit import AuditRetrievalRequestSchema
 from server.security.dependencies.sessions import get_database_session
 from server.utils.messages import raise_401_unauthorized
 
@@ -36,3 +37,25 @@ async def verify_user_access(
         return user
     except HTTPException as e:
         raise e
+
+
+def log_retrieval_query_parameters(
+    app: str = Query(),
+    env: str = Query(),
+    category: Union[str, None] = Query(default=None),
+    method: Union[str, None] = Query(default=None),
+    status: Union[str, None] = Query(default=None),
+    origin: Union[str, None] = Query(default=None),
+    start: Union[str, None] = Query(default="1d"),
+    stop: Union[str, None] = Query(default="now()"),
+) -> AuditRetrievalRequestSchema:
+    return AuditRetrievalRequestSchema(
+        category=category,
+        app=app,
+        env=env,
+        method=method,
+        status=status,
+        origin=origin,
+        start=start,
+        stop=stop,
+    )

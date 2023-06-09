@@ -46,7 +46,7 @@ class TagSchema(BaseRequestSchema):
     class Config:
         schema_extra = {
             "example": {
-                "application": "spectratrace-api",
+                "application": "spectratrace_api",
                 "environment": "staging",
             },
         }
@@ -172,7 +172,7 @@ class AuditRequestSchema(BaseRequestSchema):
             "example": {
                 "category": "audit",
                 "source_information": {
-                    "application": "spectratrace-api",
+                    "application": "spectratrace_api",
                     "environment": "staging",
                 },
                 "method": "POST",

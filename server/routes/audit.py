@@ -1,14 +1,15 @@
 from typing import Any, Dict, List, Union
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Body, Depends, HTTPException, status
 from influxdb_client import InfluxDBClient
 
 from server.config.factory import settings
 from server.database.audit.points import read_points_from_bucket
 from server.models.users import UserAccount
-from server.schemas.inc.audit import AuditRequestSchema
+from server.schemas.inc.audit import AuditRequestSchema, AuditRetrievalRequestSchema
 from server.schemas.out.audit import AuditResponseSchema
-from server.security.dependencies.audit import verify_user_access
+from server.schemas.out.auth import TokenUser
+from server.security.dependencies.audit import log_retrieval_query_parameters, verify_user_access
 from server.security.dependencies.auth import is_user_active
 from server.security.dependencies.sessions import get_influxdb_admin, get_influxdb_client
 from server.utils.enums import Tags
@@ -47,8 +48,8 @@ async def log_audit_event(
     response_model=List[AuditResponseSchema],
 )
 async def read_logs(
-    q: str = Query(),
-    current_user: Dict[str, Any] = Depends(is_user_active),
+    parameters: AuditRetrievalRequestSchema = Depends(log_retrieval_query_parameters),
+    current_user: TokenUser = Depends(is_user_active),
     influx_client: InfluxDBClient = Depends(get_influxdb_client),
 ):
     try:
@@ -56,7 +57,7 @@ async def read_logs(
             client=influx_client,
             organization=settings.INFLUXDB_ORG,
             bucket=current_user.username,
-            measurement=q,
+            parameters=parameters,
         )
         return data
     except HTTPException as e:

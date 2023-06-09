@@ -1,7 +1,7 @@
 from datetime import datetime
-from typing import List
+from typing import List, Union
 
-from pydantic import Field
+from pydantic import Field, validator
 
 from server.schemas.base import BaseRequestSchema
 from server.schemas.common.audit import ActorSchema, EventSchema, MetadataSchema, ResourceSchema, TagSchema
@@ -31,7 +31,7 @@ class AuditRequestSchema(BaseRequestSchema):
             "example": {
                 "category": "audit",
                 "source_information": {
-                    "application": "spectratrace-api",
+                    "application": "spectratrace_api",
                     "environment": "staging",
                 },
                 "method": "POST",
@@ -88,7 +88,7 @@ class AuditSchema(AuditRequestSchema):
             "example": {
                 "category": "audit",
                 "source_information": {
-                    "application": "spectratrace-api",
+                    "application": "spectratrace_api",
                     "environment": "staging",
                 },
                 "method": "POST",
@@ -132,3 +132,26 @@ class AuditSchema(AuditRequestSchema):
             },
             "timestamp": "2021-01-01T00:00:00.000000+00:00",
         }
+
+
+class AuditRetrievalRequestSchema(BaseRequestSchema):
+    app: str = Field()
+    env: str = Field()
+    category: Union[str, None] = Field(default=None)
+    method: Union[str, None] = Field(default=None)
+    status: Union[str, None] = Field(default=None)
+    origin: Union[str, None] = Field(default=None)
+    start: Union[datetime, str] = Field(default="1d")
+    stop: Union[datetime, str] = Field(default="now()")
+
+    @validator("start")
+    def convert_start(cls, v):
+        if isinstance(v, datetime):
+            return v.strftime("%Y-%m-%dT%H:%M:%SZ")
+        return f"-{v}"
+
+    @validator("stop")
+    def convert_stop(cls, v):
+        if isinstance(v, datetime):
+            return v.strftime("%Y-%m-%dT%H:%M:%SZ")
+        return v if v == "now()" else f"-{v}"
