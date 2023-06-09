@@ -1,0 +1,29 @@
+{
+    "category": "http_events",
+    "source_information": {
+        "application": "spectratrace_api",
+        "environment": "staging"
+    },
+    "method": "",
+    "status": "",
+    "level": "",
+    "event": {
+        "name": "",
+        "type": "",
+        "stage": 0,
+        "total_duration": 0.1,
+        "affected_resources": 0.1,
+        "latency": 0.1,
+        "cpu_usage": 0.1,
+        "memory_usage": 0.1,
+        "description": ""
+    },
+    "actor": {
+        "origin": ""
+    },
+    "resource": {
+        "id": "",
+        "name": "",
+        "type": ""
+    }
+}

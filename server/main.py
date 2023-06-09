@@ -5,12 +5,14 @@ import subprocess
 from time import time
 
 import requests
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 from sqlmodel import Session, create_engine, select
 
 from server.config.factory import settings
 from server.database.managers import create_db_and_tables, ping_redis_server
 from server.docs.manager import read_api_metadata, read_tags_metadata
+from server.events.http import create_http_event
 from server.events.startup import (
     admin_account_create_event,
     check_admin_account_event,
@@ -24,6 +26,7 @@ from server.routes.user import router as user_router
 from server.schemas.base import HealthResponseSchema
 from server.schemas.inc.audit import AuditSchema
 from server.security.auth.authentication import pwd_context
+from server.security.dependencies.sessions import get_influxdb_admin
 from server.utils.enums import Tags
 from server.utils.tasks import publish_task
 from server.utils.utilities import generate_random_key
@@ -31,6 +34,14 @@ from server.utils.utilities import generate_random_key
 app = FastAPI(
     **read_api_metadata(),
     openapi_tags=read_tags_metadata(),
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
@@ -172,7 +183,19 @@ def on_startup():
 
 
 @app.get("/health", response_model=HealthResponseSchema, tags=[Tags.health_check])
-async def health():
+async def health(
+    request: Request,
+    admin: UserAccount = Depends(get_influxdb_admin),
+):
+    start_time = time()
+    create_http_event(
+        request=request,
+        status_code=200,
+        affected_resource_count=0,
+        execution_time=(time() - start_time) * 1000,
+        admin=admin,
+        bucket=admin.username,
+    )
     return settings
 
 
