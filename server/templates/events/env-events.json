@@ -1,0 +1,35 @@
+{
+    "category": "app_internals",
+    "source_information": {
+        "application": "spectratrace_api",
+        "environment": "staging"
+    },
+    "method": "GET",
+    "status": "success",
+    "level": "info",
+    "event": {
+        "name": "app startup",
+        "type": "initial configuration",
+        "stage": 1,
+        "total_duration": 0.1,
+        "affected_resources": 0,
+        "latency": 0.1,
+        "cpu_usage": 0.1,
+        "memory_usage": 0.1,
+        "description": "App configuration with environment variables"
+    },
+    "actor": {
+        "origin": "spectratrace internal",
+        "detail": {
+            "location": "server/config/factory.py::get_settings - line 28"
+        }
+    },
+    "resource": {
+        "id": "env",
+        "name": "environment variables",
+        "type": "configuration",
+        "detail": {
+            "store": ""
+        }
+    }
+}

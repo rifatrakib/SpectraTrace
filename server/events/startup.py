@@ -1,17 +1,13 @@
 from typing import Any, Dict
 
-from pydantic import parse_file_as
-
 from server.config.factory import settings
 from server.models.users import UserAccount
 from server.schemas.inc.audit import AuditRequestSchema, MetadataSchema
+from server.utils.utilities import get_event_template
 
 
 def db_initialization_event(execution_time: float, sql: str) -> AuditRequestSchema:
-    event_data: AuditRequestSchema = parse_file_as(
-        type_=AuditRequestSchema,
-        path="server/templates/events/rdbms-events.json",
-    )
+    event_data: AuditRequestSchema = get_event_template("rdbms-events")
 
     event_data.status = "success"
     event_data.level = "info"
@@ -38,10 +34,7 @@ def influxdb_onboarding_event(
     headers: Dict[str, str],
     response: Dict[str, Any],
 ) -> AuditRequestSchema:
-    event_data: AuditRequestSchema = parse_file_as(
-        type_=AuditRequestSchema,
-        path="server/templates/events/influx-events.json",
-    )
+    event_data: AuditRequestSchema = get_event_template("influx-events")
 
     event_data.status = "success"
     event_data.level = "info"
@@ -71,10 +64,7 @@ def admin_account_create_event(
     sql: str,
     user: UserAccount,
 ) -> AuditRequestSchema:
-    event_data: AuditRequestSchema = parse_file_as(
-        type_=AuditRequestSchema,
-        path="server/templates/events/rdbms-events.json",
-    )
+    event_data: AuditRequestSchema = get_event_template("rdbms-events")
 
     event_data.status = "success"
     event_data.level = "info"
@@ -106,10 +96,7 @@ def check_admin_account_event(
     sql: str,
     user: UserAccount,
 ) -> AuditRequestSchema:
-    event_data: AuditRequestSchema = parse_file_as(
-        type_=AuditRequestSchema,
-        path="server/templates/events/rdbms-events.json",
-    )
+    event_data: AuditRequestSchema = get_event_template("rdbms-events")
 
     event_data.status = "success"
     event_data.level = "info"

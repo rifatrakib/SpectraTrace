@@ -47,6 +47,11 @@ def proccess_points(tables: List[FluxTable]):
                 "actor": {
                     "origin": values["actor_origin"],
                 },
+                "resource": {
+                    "id": values["resource_id"],
+                    "name": values["resource_name"],
+                    "type": values["resource_type"],
+                },
                 "timestamp": values["_time"],
             }
 
@@ -54,8 +59,8 @@ def proccess_points(tables: List[FluxTable]):
                 item["event"]["detail"] = json.loads(values["event_detail"])
             if values.get("actor_detail", None):
                 item["actor"]["detail"] = json.loads(values["actor_detail"])
-            if values.get("resource", None):
-                item["resource"] = json.loads(values["resource"])
+            if values.get("resource_detail", None):
+                item["resource"]["detail"] = json.loads(values["resource_detail"])
 
             metadata = {}
             if values.get("metadata", None):

@@ -2,8 +2,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 
 from server.models.users import UserAccount
-from server.utils.generators import generate_random_key
 from server.utils.messages import raise_404_not_found
+from server.utils.utilities import generate_random_key
 
 
 async def read_user_by_id(session: AsyncSession, user_id: int) -> UserAccount:

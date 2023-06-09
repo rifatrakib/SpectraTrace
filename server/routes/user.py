@@ -10,8 +10,8 @@ from server.schemas.out.user import UserAccessKeyResponseSchema, UserResponseSch
 from server.security.dependencies.auth import email_input_field, is_user_active
 from server.security.dependencies.sessions import get_database_session
 from server.utils.enums import Tags
-from server.utils.generators import create_temporary_activation_url
 from server.utils.messages import raise_400_bad_request
+from server.utils.utilities import create_temporary_activation_url
 
 router = APIRouter(
     prefix="/users",

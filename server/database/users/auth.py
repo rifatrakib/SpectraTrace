@@ -6,13 +6,13 @@ from sqlmodel import select
 from server.models.users import UserAccount
 from server.schemas.inc.auth import PasswordChangeRequestSchema, SignupRequestSchema
 from server.security.auth.authentication import pwd_context
-from server.utils.generators import generate_random_key
 from server.utils.messages import (
     raise_400_bad_request,
     raise_401_unauthorized,
     raise_403_forbidden,
     raise_404_not_found,
 )
+from server.utils.utilities import generate_random_key
 
 
 async def create_user_account(session: AsyncSession, payload: SignupRequestSchema) -> UserAccount:

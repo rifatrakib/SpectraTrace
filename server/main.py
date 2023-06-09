@@ -1,5 +1,7 @@
 import io
+import json
 import logging
+import subprocess
 from time import time
 
 import requests
@@ -20,10 +22,11 @@ from server.routes.audit import router as audit_router
 from server.routes.auth import router as auth_router
 from server.routes.user import router as user_router
 from server.schemas.base import HealthResponseSchema
+from server.schemas.inc.audit import AuditSchema
 from server.security.auth.authentication import pwd_context
 from server.utils.enums import Tags
-from server.utils.generators import generate_random_key
 from server.utils.tasks import publish_task
+from server.utils.utilities import generate_random_key
 
 app = FastAPI(
     **read_api_metadata(),
@@ -161,7 +164,11 @@ def on_startup():
     print("Startup complete!")
 
     startup_events.extend(admin_creation_events)
+    with open("config-event.json", "r") as reader:
+        startup_events.append(AuditSchema(**json.loads(reader.read())))
+
     publish_task(admin=admin, bucket=admin.username, event_data=startup_events)
+    subprocess.run("rm config-event.json", shell=True)
 
 
 @app.get("/health", response_model=HealthResponseSchema, tags=[Tags.health_check])

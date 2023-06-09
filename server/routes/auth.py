@@ -27,8 +27,8 @@ from server.security.dependencies.auth import (
 )
 from server.security.dependencies.sessions import get_database_session, get_influxdb_client
 from server.utils.enums import Tags
-from server.utils.generators import create_temporary_activation_url
 from server.utils.messages import raise_410_gone
+from server.utils.utilities import create_temporary_activation_url
 
 router = APIRouter(prefix="/auth", tags=[Tags.authentication])
 
