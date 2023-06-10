@@ -6,7 +6,7 @@ from server.schemas.inc.audit import AuditRequestSchema, MetadataSchema
 from server.utils.utilities import get_event_template
 
 
-def db_initialization_event(execution_time: float, sql: str) -> AuditRequestSchema:
+def db_initialization_event(execution_time: float) -> AuditRequestSchema:
     event_data: AuditRequestSchema = get_event_template("rdbms-events")
 
     event_data.status = "success"
@@ -18,7 +18,6 @@ def db_initialization_event(execution_time: float, sql: str) -> AuditRequestSche
     event_data.event.latency = execution_time / 3 * 2
     event_data.event.cpu_usage = 0.3  # sample value
     event_data.event.memory_usage = 0.1  # sample value
-    event_data.event.detail["sql"] = sql
     event_data.event.description = "Create necessary tables in PostgreSQL database"
     event_data.actor.detail["location"] = "server/main.py - line 146"
     event_data.resource.detail["database"] = settings.POSTGRES_DB
@@ -61,7 +60,6 @@ def influxdb_onboarding_event(
 
 def admin_account_create_event(
     execution_time: float,
-    sql: str,
     user: UserAccount,
 ) -> AuditRequestSchema:
     event_data: AuditRequestSchema = get_event_template("rdbms-events")
@@ -75,7 +73,6 @@ def admin_account_create_event(
     event_data.event.latency = execution_time / 3 * 2
     event_data.event.cpu_usage = 0.25  # sample value
     event_data.event.memory_usage = 0.2  # sample value
-    event_data.event.detail["sql"] = sql
     event_data.event.description = "Create admin account in PostgreSQL database"
     event_data.actor.detail["location"] = "server/main.py::on_startup - line 80"
     event_data.resource.detail["database"] = settings.POSTGRES_DB
@@ -93,7 +90,6 @@ def admin_account_create_event(
 
 def check_admin_account_event(
     execution_time: float,
-    sql: str,
     user: UserAccount,
 ) -> AuditRequestSchema:
     event_data: AuditRequestSchema = get_event_template("rdbms-events")
@@ -107,7 +103,6 @@ def check_admin_account_event(
     event_data.event.latency = execution_time / 3 * 2
     event_data.event.cpu_usage = 0.1  # sample value
     event_data.event.memory_usage = 0.1  # sample value
-    event_data.event.detail["sql"] = sql
     event_data.event.description = "Check if admin account exists in PostgreSQL database"
     event_data.actor.detail["location"] = "server/main.py::on_startup - line 101"
     event_data.resource.detail["database"] = settings.POSTGRES_DB

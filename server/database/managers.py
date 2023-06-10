@@ -1,6 +1,4 @@
-import io
 import json
-import logging
 from functools import lru_cache
 from typing import Any, Dict, List, Union
 
@@ -12,17 +10,9 @@ from server.models.users import BaseSQLTable as UserTables
 from server.utils.messages import raise_410_gone
 
 
-def create_db_and_tables() -> str:
+def create_db_and_tables() -> None:
     engine = create_engine(settings.RDS_URI, echo=True)
-
-    log_stream = io.StringIO()
-    handler = logging.StreamHandler(log_stream)
-    handler.setLevel(logging.DEBUG)
-    logging.getLogger("sqlalchemy.engine").addHandler(handler)
-
     UserTables.metadata.create_all(engine)
-
-    return log_stream.getvalue()
 
 
 @lru_cache()

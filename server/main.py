@@ -1,6 +1,4 @@
-import io
 import json
-import logging
 import subprocess
 from time import time
 
@@ -76,11 +74,6 @@ def influxdb_onboarding(base_url, user, password, organization):
 
 def create_admin_account(username, password, organization, api_token):
     engine = create_engine(settings.RDS_URI, echo=True)
-    log_stream = io.StringIO()
-    handler = logging.StreamHandler(log_stream)
-    handler.setLevel(logging.DEBUG)
-    logging.getLogger("sqlalchemy.engine").addHandler(handler)
-
     user = UserAccount(
         username=username,
         hashed_password=pwd_context.hash_plain_password(password),
@@ -98,12 +91,8 @@ def create_admin_account(username, password, organization, api_token):
         session.refresh(user)
 
     execution_time = (time() - start_time) * 1000
-    sql = log_stream.getvalue()
-    log_stream.close()
-
     event_data = admin_account_create_event(
         execution_time=execution_time,
-        sql=sql,
         user=user,
     )
     return event_data, user
@@ -117,11 +106,9 @@ def admin_account_exists(username: str) -> bool:
     stmt = select(UserAccount).where(UserAccount.username == username)
     user = session.exec(stmt).first()
     execution_time = (time() - start_time) * 1000
-    sql = str(stmt.compile(engine, compile_kwargs={"literal_binds": True}))
 
     event_data = check_admin_account_event(
         execution_time=execution_time,
-        sql=sql,
         user=user,
     )
     return event_data, user
@@ -160,10 +147,10 @@ def on_startup():
 
     print("Creating relational database and tables...")
     start_time = time()
-    sql = create_db_and_tables()
+    create_db_and_tables()
     execution_time = (time() - start_time) * 1000
 
-    event_data = db_initialization_event(execution_time=execution_time, sql=sql)
+    event_data = db_initialization_event(execution_time=execution_time)
     startup_events.append(event_data)
     print("Relational database and tables created!")
 

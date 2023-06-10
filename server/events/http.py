@@ -1,4 +1,4 @@
-import json
+from typing import List
 
 from fastapi import Request
 
@@ -15,6 +15,7 @@ def create_http_event(
     affected_resource_count: int,
     execution_time: float,
     admin: UserAccount,
+    metadata: List[MetadataSchema] = [],
 ):
     event_data: AuditRequestSchema = get_event_template("http-events")
 
@@ -30,16 +31,10 @@ def create_http_event(
     event_data.event.memory_usage = 0.1  # sample value
     event_data.event.description = "Information about HTTP request-response cycle"
     event_data.actor.origin = f"{request.client.host}:{request.client.port}"
-    event_data.actor.detail = dict(request.headers)
+    event_data.actor.detail = {"user_agent": request.headers.get("user-agent", "N/A")}
     event_data.resource.id = request.url.path.strip("/").replace("/", "-")
     event_data.resource.name = request.url.path
     event_data.resource.type = "http"
-    event_data.metadata = [
-        MetadataSchema(
-            is_metric=False,
-            name="request_headers",
-            value=json.dumps(dict(request.headers)),
-        ),
-    ]
+    event_data.metadata = metadata
 
     publish_task(admin=admin, bucket=admin.username, event_data=event_data)
