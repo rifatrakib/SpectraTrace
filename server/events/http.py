@@ -15,7 +15,6 @@ def create_http_event(
     affected_resource_count: int,
     execution_time: float,
     admin: UserAccount,
-    bucket: str,
 ):
     event_data: AuditRequestSchema = get_event_template("http-events")
 
@@ -43,4 +42,4 @@ def create_http_event(
         ),
     ]
 
-    publish_task(admin=admin, bucket=bucket, event_data=event_data)
+    publish_task(admin=admin, bucket=admin.username, event_data=event_data)

@@ -194,7 +194,6 @@ async def health(
         affected_resource_count=0,
         execution_time=(time() - start_time) * 1000,
         admin=admin,
-        bucket=admin.username,
     )
     return settings
 

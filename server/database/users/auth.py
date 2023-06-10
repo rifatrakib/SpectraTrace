@@ -1,7 +1,6 @@
 from pydantic import EmailStr
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlmodel import select
+from sqlmodel import or_, select
 
 from server.models.users import UserAccount
 from server.schemas.inc.auth import PasswordChangeRequestSchema, SignupRequestSchema
@@ -15,7 +14,25 @@ from server.utils.messages import (
 from server.utils.utilities import generate_random_key
 
 
+async def read_user_by_email_or_username(
+    session: AsyncSession,
+    username: str,
+    email: EmailStr,
+) -> UserAccount:
+    stmt = select(UserAccount).where(or_(UserAccount.username == username, UserAccount.email == email))
+    query = await session.execute(stmt)
+    user = query.scalar()
+    return user
+
+
 async def create_user_account(session: AsyncSession, payload: SignupRequestSchema) -> UserAccount:
+    user = await read_user_by_email_or_username(session, payload.username, payload.email)
+    if user:
+        if user.username == payload.username:
+            raise raise_400_bad_request(message=f"The username {payload.username} is already registered.")
+        if user.email == payload.email:
+            raise raise_400_bad_request(message=f"The email {payload.email} is already registered.")
+
     hashed_password = pwd_context.hash_plain_password(payload.password)
     user = UserAccount(
         username=payload.username,
@@ -24,13 +41,10 @@ async def create_user_account(session: AsyncSession, payload: SignupRequestSchem
         access_key=generate_random_key(),
     )
 
-    try:
-        session.add(user)
-        await session.commit()
-        await session.refresh(user)
-        return user
-    except IntegrityError:
-        raise raise_400_bad_request(message=f"The username {payload.username} is already registered.")
+    session.add(user)
+    await session.commit()
+    await session.refresh(user)
+    return user
 
 
 async def authenticate_user(session: AsyncSession, username: str, password: str) -> UserAccount:
