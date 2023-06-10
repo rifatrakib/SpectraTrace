@@ -5,14 +5,8 @@ import pytest
 from redis import Redis
 
 from server.config.factory import settings
-from server.database.managers import (
-    activate_from_cache,
-    cache_data,
-    create_db_and_tables,
-    get_redis_client,
-    is_in_cache,
-    ping_redis_server,
-)
+from server.database.cache.ops import activate_from_cache, cache_data, is_in_cache
+from server.database.managers import create_db_and_tables, get_redis_client, ping_redis_server
 
 
 class TestCreateDbAndTables:
@@ -90,7 +84,7 @@ class TestRedisFunctions:
         mock_client.exists.return_value = True
 
         # Call the function under test
-        result = is_in_cache(key="test_key")
+        result, _ = is_in_cache(key="test_key")
         mock_get_redis_client.assert_called_once()
         mock_client.exists.assert_called_once_with("test_key")
         assert result is True
@@ -103,7 +97,7 @@ class TestRedisFunctions:
         mock_client.exists.return_value = False
 
         # Call the function under test
-        result = is_in_cache(key="test_key")
+        result, _ = is_in_cache(key="test_key")
         mock_get_redis_client.assert_called_once()
         mock_client.exists.assert_called_once_with("test_key")
         assert result is None
@@ -130,7 +124,7 @@ class TestRedisFunctions:
         mock_client.get.return_value = json.dumps(mock_data).encode("utf-8")
 
         # Call the function under test
-        result = activate_from_cache(key="test_key")
+        result, _ = activate_from_cache(key="test_key")
 
         # Assertions
         mock_get_redis_client.assert_called_once()

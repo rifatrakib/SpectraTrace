@@ -4,7 +4,7 @@
         "application": "spectratrace_api",
         "environment": "staging"
     },
-    "method": "POST",
+    "method": "",
     "status": "",
     "level": "",
     "event": {
@@ -16,24 +16,17 @@
         "latency": 0.1,
         "cpu_usage": 0.1,
         "memory_usage": 0.1,
-        "detail": {
-            "sql": "",
-            "parameters": null
-        },
+        "detail": {},
         "description": ""
     },
     "actor": {
-        "origin": "spectratrace internal",
-        "detail": {
-            "location": null
-        }
+        "origin": "http://api:8000",
+        "detail": {}
     },
     "resource": {
         "id": "rds",
         "name": "PostgreSQL database",
         "type": "database",
-        "detail": {
-            "database": ""
-        }
+        "detail": {}
     }
 }

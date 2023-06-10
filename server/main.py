@@ -107,10 +107,7 @@ def admin_account_exists(username: str) -> bool:
     user = session.exec(stmt).first()
     execution_time = (time() - start_time) * 1000
 
-    event_data = check_admin_account_event(
-        execution_time=execution_time,
-        user=user,
-    )
+    event_data = check_admin_account_event(execution_time=execution_time)
     return event_data, user
 
 
@@ -175,13 +172,15 @@ async def health(
     admin: UserAccount = Depends(get_influxdb_admin),
 ):
     start_time = time()
-    create_http_event(
-        request=request,
-        status_code=200,
-        affected_resource_count=0,
-        execution_time=(time() - start_time) * 1000,
-        admin=admin,
-    )
+    events = [
+        create_http_event(
+            request=request,
+            status_code=200,
+            affected_resource_count=0,
+            execution_time=(time() - start_time) * 1000,
+        ),
+    ]
+    publish_task(admin=admin, bucket=admin.username, event_data=events)
     return settings
 
 

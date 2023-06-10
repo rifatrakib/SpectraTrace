@@ -11,6 +11,7 @@ from server.schemas.out.user import UserAccessKeyResponseSchema, UserResponseSch
 from server.security.dependencies.auth import is_user_active
 from server.security.dependencies.sessions import get_database_session, get_influxdb_admin
 from server.utils.enums import Tags
+from server.utils.tasks import publish_task
 
 router = APIRouter(
     prefix="/users",
@@ -33,21 +34,25 @@ async def read_current_user(
     session: AsyncSession = Depends(get_database_session),
 ) -> UserResponseSchema:
     status_code = 200
+    events = []
     start_time = time()
     try:
-        user = await read_user_by_id(session=session, user_id=current_user.id)
+        user, event = await read_user_by_id(session=session, user_id=current_user.id)
+        events.append(event)
         return user
     except HTTPException as e:
         status_code = e.status_code
         raise e
     finally:
-        create_http_event(
-            request=request,
-            status_code=status_code,
-            affected_resource_count=0,
-            execution_time=(time() - start_time) * 1000,
-            admin=admin,
+        events.append(
+            create_http_event(
+                request=request,
+                status_code=status_code,
+                affected_resource_count=len(events),
+                execution_time=(time() - start_time) * 1000,
+            ),
         )
+        publish_task(admin=admin, bucket=admin.username, event_data=events)
 
 
 @router.get(
@@ -64,21 +69,26 @@ async def read_single_user(
     session: AsyncSession = Depends(get_database_session),
 ) -> UserResponseSchema:
     status_code = 200
+    events = []
     start_time = time()
+
     try:
-        user = await read_user_by_id(session=session, user_id=user_id)
+        user, event = await read_user_by_id(session=session, user_id=user_id)
+        events.append(event)
         return user
     except HTTPException as e:
         status_code = e.status_code
         raise e
     finally:
-        create_http_event(
-            request=request,
-            status_code=status_code,
-            affected_resource_count=0,
-            execution_time=(time() - start_time) * 1000,
-            admin=admin,
+        events.append(
+            create_http_event(
+                request=request,
+                status_code=status_code,
+                affected_resource_count=len(events),
+                execution_time=(time() - start_time) * 1000,
+            ),
         )
+        publish_task(admin=admin, bucket=admin.username, event_data=events)
 
 
 @router.get(
@@ -95,18 +105,23 @@ async def read_current_user_access_key(
     session: AsyncSession = Depends(get_database_session),
 ) -> UserAccessKeyResponseSchema:
     status_code = 200
+    events = []
     start_time = time()
+
     try:
-        user = await read_user_by_id(session=session, user_id=current_user.id)
+        user, event = await read_user_by_id(session=session, user_id=current_user.id)
+        events.append(event)
         return user
     except HTTPException as e:
         status_code = e.status_code
         raise e
     finally:
-        create_http_event(
-            request=request,
-            status_code=status_code,
-            affected_resource_count=0,
-            execution_time=(time() - start_time) * 1000,
-            admin=admin,
+        events.append(
+            create_http_event(
+                request=request,
+                status_code=status_code,
+                affected_resource_count=len(events),
+                execution_time=(time() - start_time) * 1000,
+            ),
         )
+        publish_task(admin=admin, bucket=admin.username, event_data=events)

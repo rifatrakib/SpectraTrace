@@ -4,7 +4,7 @@ from fastapi import Depends, Header, HTTPException, Query
 from sqlmodel import Session
 
 from server.database.audit.auth import check_user_access_key
-from server.database.managers import cache_data, is_in_cache, read_from_cache
+from server.database.cache.ops import cache_data, is_in_cache, read_from_cache
 from server.schemas.inc.audit import AuditRetrievalRequestSchema
 from server.security.dependencies.sessions import get_database_session
 from server.utils.messages import raise_401_unauthorized
@@ -28,12 +28,13 @@ async def verify_user_access(
     session: Session = Depends(get_database_session),
 ) -> Dict[str, Any]:
     try:
-        if not is_in_cache(key=api_key):
+        is_valid, _ = is_in_cache(key=api_key)
+        if not is_valid:
             user = await check_user_access_key(session, api_key)
             cache_data(key=api_key, data=user.json())
             return user.dict()
 
-        user = read_from_cache(key=api_key)
+        user, _ = read_from_cache(key=api_key)
         return user
     except HTTPException as e:
         raise e

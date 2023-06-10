@@ -1,5 +1,5 @@
 {
-    "category": "influxdb_ops",
+    "category": "redis_ops",
     "source_information": {
         "application": "spectratrace_api",
         "environment": "staging"
@@ -24,9 +24,9 @@
         "detail": {}
     },
     "resource": {
-        "id": "tsdb",
-        "name": "InfluxDB",
-        "type": "database",
+        "id": "redis",
+        "name": "Redis Cache",
+        "type": "temporary storage",
         "detail": {}
     }
 }

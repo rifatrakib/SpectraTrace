@@ -2,11 +2,9 @@ from typing import List
 
 from fastapi import Request
 
-from server.models.users import UserAccount
+from server.events.templates import get_event_template
 from server.schemas.common.audit import MetadataSchema
 from server.schemas.inc.audit import AuditRequestSchema
-from server.utils.tasks import publish_task
-from server.utils.utilities import get_event_template
 
 
 def create_http_event(
@@ -14,9 +12,8 @@ def create_http_event(
     status_code: int,
     affected_resource_count: int,
     execution_time: float,
-    admin: UserAccount,
     metadata: List[MetadataSchema] = [],
-):
+) -> AuditRequestSchema:
     event_data: AuditRequestSchema = get_event_template("http-events")
 
     event_data.method = request.method
@@ -37,4 +34,4 @@ def create_http_event(
     event_data.resource.type = "http"
     event_data.metadata = metadata
 
-    publish_task(admin=admin, bucket=admin.username, event_data=event_data)
+    return event_data

@@ -6,7 +6,7 @@ from pydantic import EmailStr
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from server.database.audit.auth import create_user_bucket
-from server.database.managers import activate_from_cache, is_in_cache
+from server.database.cache.ops import activate_from_cache, is_in_cache
 from server.database.users.auth import (
     activate_user_account,
     authenticate_user,
@@ -32,6 +32,7 @@ from server.security.dependencies.auth import (
 from server.security.dependencies.sessions import get_database_session, get_influxdb_admin, get_influxdb_client
 from server.utils.enums import Tags
 from server.utils.messages import raise_410_gone
+from server.utils.tasks import publish_task
 from server.utils.utilities import create_temporary_activation_url
 
 router = APIRouter(prefix="/auth", tags=[Tags.authentication])
@@ -51,22 +52,33 @@ async def register(
     session: AsyncSession = Depends(get_database_session),
 ) -> MessageResponseSchema:
     status_code = 201
+    events = []
     start_time = time()
+
     try:
-        new_user = await create_user_account(session=session, payload=payload)
-        url = create_temporary_activation_url(new_user, f"{request.base_url}auth/activate")
+        new_user, event = await create_user_account(
+            session=session,
+            payload=payload,
+        )
+        events.append(event)
+
+        url, event = create_temporary_activation_url(new_user, f"{request.base_url}auth/activate")
+        events.append(event)
+
         return {"msg": f"Account created. Activate your account using {url}."}
     except HTTPException as e:
         status_code = e.status_code
         raise e
     finally:
-        create_http_event(
-            request=request,
-            status_code=status_code,
-            affected_resource_count=0,
-            execution_time=(time() - start_time) * 1000,
-            admin=admin,
+        events.append(
+            create_http_event(
+                request=request,
+                status_code=status_code,
+                affected_resource_count=len(events),
+                execution_time=(time() - start_time) * 1000,
+            ),
         )
+        publish_task(admin=admin, bucket=admin.username, event_data=events)
 
 
 @router.post(
@@ -83,26 +95,32 @@ async def login(
     session: AsyncSession = Depends(get_database_session),
 ) -> TokenResponseSchema:
     status_code = 202
+    events = []
     start_time = time()
+
     try:
-        user = await authenticate_user(
+        user, event = await authenticate_user(
             session=session,
             username=payload.username,
             password=payload.password,
         )
+        events.append(event)
+
         token = create_jwt(user)
         return {"access_token": token, "token_type": "Bearer"}
     except HTTPException as e:
         status_code = e.status_code
         raise e
     finally:
-        create_http_event(
-            request=request,
-            status_code=status_code,
-            affected_resource_count=0,
-            execution_time=(time() - start_time) * 1000,
-            admin=admin,
+        events.append(
+            create_http_event(
+                request=request,
+                status_code=status_code,
+                affected_resource_count=len(events),
+                execution_time=(time() - start_time) * 1000,
+            )
         )
+        publish_task(admin=admin, bucket=admin.username, event_data=events)
 
 
 @router.get(
@@ -120,23 +138,33 @@ async def activate_account(
     influx_client: InfluxDBClient = Depends(get_influxdb_client),
 ) -> MessageResponseSchema:
     status_code = 200
+    events = []
     start_time = time()
+
     try:
-        user = activate_from_cache(key=key)
-        create_user_bucket(client=influx_client, user=user)
-        updated_user = await activate_user_account(session=session, user_id=user["id"])
+        user, cache_events = activate_from_cache(key=key)
+        events.extend(cache_events)
+
+        event = create_user_bucket(client=influx_client, user=user)
+        events.append(event)
+
+        updated_user, event = await activate_user_account(session=session, user_id=user["id"])
+        events.append(event)
+
         return {"msg": f"User account {updated_user.username} activated."}
     except HTTPException as e:
         status_code = e.status_code
         raise e
     finally:
-        create_http_event(
-            request=request,
-            status_code=status_code,
-            affected_resource_count=0,
-            execution_time=(time() - start_time) * 1000,
-            admin=admin,
+        events.append(
+            create_http_event(
+                request=request,
+                status_code=status_code,
+                affected_resource_count=len(events),
+                execution_time=(time() - start_time) * 1000,
+            ),
         )
+        publish_task(admin=admin, bucket=admin.username, event_data=events)
 
 
 @router.post(
@@ -153,22 +181,30 @@ async def resend_activation_key(
     session: AsyncSession = Depends(get_database_session),
 ) -> MessageResponseSchema:
     status_code = 200
+    events = []
     start_time = time()
+
     try:
-        user = await read_user_by_email(session=session, email=email)
-        url = create_temporary_activation_url(user, f"{request.base_url}auth/activate")
+        user, event = await read_user_by_email(session=session, email=email)
+        events.append(event)
+
+        url, event = create_temporary_activation_url(user, f"{request.base_url}auth/activate")
+        events.append(event)
+
         return {"msg": f"Activation key resent. Activate your account using {url}."}
     except HTTPException as e:
         status_code = e.status_code
         raise e
     finally:
-        create_http_event(
-            request=request,
-            status_code=status_code,
-            affected_resource_count=0,
-            execution_time=(time() - start_time) * 1000,
-            admin=admin,
+        events.append(
+            create_http_event(
+                request=request,
+                status_code=status_code,
+                affected_resource_count=len(events),
+                execution_time=(time() - start_time) * 1000,
+            )
         )
+        publish_task(admin=admin, bucket=admin.username, event_data=events)
 
 
 @router.patch(
@@ -186,21 +222,27 @@ async def change_password(
     session: AsyncSession = Depends(get_database_session),
 ) -> MessageResponseSchema:
     status_code = 200
+    events = []
     start_time = time()
+
     try:
-        user = await update_password(session=session, user_id=user.id, payload=payload)
+        user, event = await update_password(session=session, user_id=user.id, payload=payload)
+        events.append(event)
+
         return {"msg": "Password changed."}
     except HTTPException as e:
         status_code = e.status_code
         raise e
     finally:
-        create_http_event(
-            request=request,
-            status_code=status_code,
-            affected_resource_count=0,
-            execution_time=(time() - start_time) * 1000,
-            admin=admin,
+        events.append(
+            create_http_event(
+                request=request,
+                status_code=status_code,
+                affected_resource_count=len(events),
+                execution_time=(time() - start_time) * 1000,
+            )
         )
+        publish_task(admin=admin, bucket=admin.username, event_data=events)
 
 
 @router.post(
@@ -217,22 +259,30 @@ async def forgot_password(
     session: AsyncSession = Depends(get_database_session),
 ) -> MessageResponseSchema:
     status_code = 200
+    events = []
     start_time = time()
+
     try:
-        user = await read_user_by_email(session=session, email=email)
-        url = create_temporary_activation_url(user, f"{request.base_url}auth/password/reset")
+        user, event = await read_user_by_email(session=session, email=email)
+        events.append(event)
+
+        url, event = create_temporary_activation_url(user, f"{request.base_url}auth/password/reset")
+        events.append(event)
+
         return {"msg": f"Activation key resent. Activate your account using {url}."}
     except HTTPException as e:
         status_code = e.status_code
         raise e
     finally:
-        create_http_event(
-            request=request,
-            status_code=status_code,
-            affected_resource_count=0,
-            execution_time=(time() - start_time) * 1000,
-            admin=admin,
+        events.append(
+            create_http_event(
+                request=request,
+                status_code=status_code,
+                affected_resource_count=len(events),
+                execution_time=(time() - start_time) * 1000,
+            )
         )
+        publish_task(admin=admin, bucket=admin.username, event_data=events)
 
 
 @router.get(
@@ -243,25 +293,34 @@ async def forgot_password(
     status_code=status.HTTP_200_OK,
 )
 async def is_reset_password_route_valid(
-    request: Request, admin: UserAccount = Depends(get_influxdb_admin), key: str = Query(description="Activation key.")
+    request: Request,
+    admin: UserAccount = Depends(get_influxdb_admin),
+    key: str = Query(description="Activation key."),
 ) -> MessageResponseSchema:
     status_code = 200
+    events = []
     start_time = time()
+
     try:
-        if is_in_cache(key=key):
+        is_valid, event = is_in_cache(key=key)
+        events.append(event)
+
+        if is_valid:
             return {"msg": "Allowed to reset password."}
         raise raise_410_gone(message="Token expired or invalid.")
     except HTTPException as e:
         status_code = e.status_code
         raise e
     finally:
-        create_http_event(
-            request=request,
-            status_code=status_code,
-            affected_resource_count=0,
-            execution_time=(time() - start_time) * 1000,
-            admin=admin,
+        events.append(
+            create_http_event(
+                request=request,
+                status_code=status_code,
+                affected_resource_count=len(events),
+                execution_time=(time() - start_time) * 1000,
+            ),
         )
+        publish_task(admin=admin, bucket=admin.username, event_data=events)
 
 
 @router.patch(
@@ -279,19 +338,31 @@ async def reset_password(
     new_password: str = Depends(password_reset_request_form),
 ) -> MessageResponseSchema:
     status_code = 200
+    events = []
     start_time = time()
+
     try:
-        user = activate_from_cache(key=key)
-        updated_user = await reset_user_password(session=session, user_id=user["id"], new_password=new_password)
+        user, cache_events = activate_from_cache(key=key)
+        events.extend(cache_events)
+
+        updated_user, event = await reset_user_password(
+            session=session,
+            user_id=user["id"],
+            new_password=new_password,
+        )
+        events.append(event)
+
         return {"msg": f"User account {updated_user.username} reset password successful."}
     except HTTPException as e:
         status_code = e.status_code
         raise e
     finally:
-        create_http_event(
-            request=request,
-            status_code=status_code,
-            affected_resource_count=0,
-            execution_time=(time() - start_time) * 1000,
-            admin=admin,
+        events.append(
+            create_http_event(
+                request=request,
+                status_code=status_code,
+                affected_resource_count=len(events),
+                execution_time=(time() - start_time) * 1000,
+            )
         )
+        publish_task(admin=admin, bucket=admin.username, event_data=events)

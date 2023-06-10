@@ -1,10 +1,13 @@
+from time import time
 from typing import Any, Dict
 
 from influxdb_client import BucketsApi, InfluxDBClient
 from sqlmodel import Session, select
 
 from server.config.factory import settings
+from server.events.influxdb import influxdb_event
 from server.models.users import UserAccount
+from server.schemas.inc.audit import AuditRequestSchema
 from server.utils.messages import raise_404_not_found
 
 
@@ -28,10 +31,25 @@ async def get_admin_user(session: Session) -> UserAccount:
     return user
 
 
-def create_user_bucket(client: InfluxDBClient, user: Dict[str, Any]) -> str:
+def create_user_bucket(
+    client: InfluxDBClient,
+    user: Dict[str, Any],
+) -> AuditRequestSchema:
+    start_time = time()
+
     with client:
         bucket_api = BucketsApi(client)
         bucket_api.create_bucket(
             bucket_name=user["username"],
             org=settings.INFLUXDB_ORG,
         )
+
+    event = influxdb_event(
+        execution_time=(time() - start_time) * 1000,
+        event_method="POST",
+        event_name="bucket-create",
+        event_type="write",
+        event_description="Create new bucket for user",
+        data={"bucket_name": user["username"], "org": settings.INFLUXDB_ORG},
+    )
+    return event

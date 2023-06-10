@@ -1,8 +1,13 @@
+from time import time
+from typing import Tuple
+
 from pydantic import EmailStr
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import or_, select
 
+from server.events.rds import relational_db_event
 from server.models.users import UserAccount
+from server.schemas.inc.audit import AuditRequestSchema
 from server.schemas.inc.auth import PasswordChangeRequestSchema, SignupRequestSchema
 from server.security.auth.authentication import pwd_context
 from server.utils.messages import (
@@ -25,8 +30,17 @@ async def read_user_by_email_or_username(
     return user
 
 
-async def create_user_account(session: AsyncSession, payload: SignupRequestSchema) -> UserAccount:
-    user = await read_user_by_email_or_username(session, payload.username, payload.email)
+async def create_user_account(
+    session: AsyncSession,
+    payload: SignupRequestSchema,
+) -> Tuple[UserAccount, AuditRequestSchema]:
+    start_time = time()
+    user = await read_user_by_email_or_username(
+        session=session,
+        username=payload.username,
+        email=payload.email,
+    )
+
     if user:
         if user.username == payload.username:
             raise raise_400_bad_request(message=f"The username {payload.username} is already registered.")
@@ -44,10 +58,26 @@ async def create_user_account(session: AsyncSession, payload: SignupRequestSchem
     session.add(user)
     await session.commit()
     await session.refresh(user)
-    return user
+
+    event = relational_db_event(
+        execution_time=(time() - start_time) * 1000,
+        affected_resource_count=1,
+        user=user,
+        event_method="write",
+        event_name="user-account-created",
+        event_type="insert",
+        event_description=f"User account for {user.username} was created",
+    )
+
+    return user, event
 
 
-async def authenticate_user(session: AsyncSession, username: str, password: str) -> UserAccount:
+async def authenticate_user(
+    session: AsyncSession,
+    username: str,
+    password: str,
+) -> Tuple[UserAccount, AuditRequestSchema]:
+    start_time = time()
     stmt = select(UserAccount).where(UserAccount.username == username)
     query = await session.execute(stmt)
     user = query.scalar()
@@ -61,35 +91,77 @@ async def authenticate_user(session: AsyncSession, username: str, password: str)
     if not pwd_context.verify_password(password, user.hashed_password):
         raise raise_401_unauthorized(message="Incorrect password.")
 
-    return user
+    event = relational_db_event(
+        execution_time=(time() - start_time) * 1000,
+        affected_resource_count=1,
+        user=user,
+        event_method="read",
+        event_name="user-authenticated",
+        event_type="select",
+        event_description=f"User {user.username} was authenticated",
+    )
+
+    return user, event
 
 
-async def activate_user_account(session: AsyncSession, user_id: int) -> UserAccount:
+async def activate_user_account(
+    session: AsyncSession,
+    user_id: int,
+) -> Tuple[UserAccount, AuditRequestSchema]:
+    start_time = time()
     stmt = select(UserAccount).where(UserAccount.id == user_id)
     query = await session.execute(stmt)
     user = query.scalar()
+
     user.is_active = True
     session.add(user)
     await session.commit()
     await session.refresh(user)
-    return user
+
+    event = relational_db_event(
+        execution_time=(time() - start_time) * 1000,
+        affected_resource_count=1,
+        user=user,
+        event_method="write",
+        event_name="user-account-activated",
+        event_type="update",
+        event_description=f"User account for {user.username} was activated",
+    )
+
+    return user, event
 
 
-async def read_user_by_email(session: AsyncSession, email: EmailStr) -> UserAccount:
+async def read_user_by_email(
+    session: AsyncSession,
+    email: EmailStr,
+) -> Tuple[UserAccount, AuditRequestSchema]:
+    start_time = time()
     stmt = select(UserAccount).where(UserAccount.email == email)
     query = await session.execute(stmt)
     user = query.scalar()
 
     if not user:
         raise raise_404_not_found(message=f"{email} is not registered.")
-    return user
+
+    event = relational_db_event(
+        execution_time=(time() - start_time) * 1000,
+        affected_resource_count=1,
+        user=user,
+        event_method="read",
+        event_name="user-account-read",
+        event_type="select",
+        event_description=f"User account for {user.username} was read",
+    )
+
+    return user, event
 
 
 async def update_password(
     session: AsyncSession,
     user_id: int,
     payload: PasswordChangeRequestSchema,
-) -> UserAccount:
+) -> Tuple[UserAccount, AuditRequestSchema]:
+    start_time = time()
     stmt = select(UserAccount).where(UserAccount.id == user_id)
     query = await session.execute(stmt)
     user = query.scalar()
@@ -101,15 +173,43 @@ async def update_password(
     session.add(user)
     await session.commit()
     await session.refresh(user)
-    return user
+
+    event = relational_db_event(
+        execution_time=(time() - start_time) * 1000,
+        affected_resource_count=1,
+        user=user,
+        event_method="write",
+        event_name="user-password-updated",
+        event_type="update",
+        event_description=f"User password for {user.username} was updated",
+    )
+
+    return user, event
 
 
-async def reset_user_password(session: AsyncSession, user_id: int, new_password: str) -> UserAccount:
+async def reset_user_password(
+    session: AsyncSession,
+    user_id: int,
+    new_password: str,
+) -> Tuple[UserAccount, AuditRequestSchema]:
+    start_time = time()
     stmt = select(UserAccount).where(UserAccount.id == user_id)
     query = await session.execute(stmt)
     user = query.scalar()
+
     user.hashed_password = pwd_context.hash_plain_password(new_password)
     session.add(user)
     await session.commit()
     await session.refresh(user)
-    return user
+
+    event = relational_db_event(
+        execution_time=(time() - start_time) * 1000,
+        affected_resource_count=1,
+        user=user,
+        event_method="write",
+        event_name="user-password-reset",
+        event_type="update",
+        event_description=f"User password for {user.username} was reset",
+    )
+
+    return user, event
