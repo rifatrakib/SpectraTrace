@@ -107,3 +107,28 @@ def read_points_from_bucket(
 
     result = proccess_points(result)
     return result
+
+
+def read_list_of_available_metrics(
+    client: InfluxDBClient,
+    organization: str,
+    bucket: str,
+):
+    query = (
+        f'from(bucket: "{bucket}")'
+        " |> range(start: 0)"
+        ' |> keep(columns: ["_field"])'
+        " |> group()"
+        ' |> distinct(column: "_field")'
+        ' |> yield(name: "fieldKeys")'
+    )
+
+    with client:
+        query_api = client.query_api()
+        result = query_api.query(query=query, org=organization)
+
+    metrics = [record.values["_value"] for table in result for record in table.records]
+    invariant_fields = get_invariant_fields()
+    metrics = list(filter(lambda x: x not in invariant_fields, metrics))
+
+    return metrics
