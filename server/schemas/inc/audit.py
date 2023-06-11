@@ -135,14 +135,14 @@ class AuditSchema(AuditRequestSchema):
 
 
 class AuditRetrievalRequestSchema(BaseRequestSchema):
-    category: str = Field()
-    app: str = Field()
-    env: Union[str, None] = Field(default=None)
-    method: Union[str, None] = Field(default=None)
-    status: Union[str, None] = Field(default=None)
-    origin: Union[str, None] = Field(default=None)
-    start: Union[datetime, str] = Field(default="1d")
-    stop: Union[datetime, str] = Field(default="now()")
+    category: str = Field(title="category", description="Category", example="http_events")
+    app: str = Field(title="app", description="Application", example="spectratrace_api")
+    env: Union[str, None] = Field(default=None, title="env", description="Environment")
+    method: Union[str, None] = Field(default=None, title="method", description="Method")
+    status: Union[str, None] = Field(default=None, title="status", description="Status")
+    origin: Union[str, None] = Field(default=None, title="origin", description="Origin")
+    start: Union[datetime, str] = Field(default="1d", title="start", description="Start time")
+    stop: Union[datetime, str] = Field(default="now()", title="stop", description="Stop time")
 
     @validator("start")
     def convert_start(cls, v):

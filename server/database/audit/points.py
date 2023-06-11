@@ -1,6 +1,6 @@
 import json
 from functools import lru_cache
-from typing import List
+from typing import List, Union
 
 from influxdb_client import InfluxDBClient, Point
 from influxdb_client.client.flux_table import FluxTable
@@ -109,8 +109,10 @@ def read_points_from_bucket(
     organization: str,
     bucket: str,
     parameters: AuditRetrievalRequestSchema,
+    offset: int,
 ) -> List[Point]:
     query = build_influxdb_query(bucket=bucket, parameters=parameters)
+    query += f' |> sort(columns: ["_time"], desc: true) |> limit(n: 50, offset: {offset})'
 
     with client:
         query_api = client.query_api()
@@ -142,21 +144,37 @@ def read_list_of_available_metrics(
     invariant_fields = get_invariant_fields()
     metrics = list(filter(lambda x: x not in invariant_fields, metrics))
 
-    return metrics + ["affected_resources", "event_duration", "latency", "cpu_usage", "memory_usage"]
+    return metrics + ["cpu_usage", "memory_usage"]
 
 
-def process_metric_result(tables: List[FluxTable], metric_name: str):
-    result = []
+def process_metric_result(tables: List[FluxTable], metric_name: str, group_by: str = None):
+    result = {}
     for table in tables:
         for record in table.records:
             values = record.values
-            result.append(
-                {
-                    "range": f'{values["_start"]} - {values["_stop"]}',
-                    "value": values[metric_name],
-                },
-            )
 
+            if group_by:
+                if values[group_by] not in result:
+                    result[values[group_by]] = []
+
+                result[values[group_by]].append(
+                    {
+                        "range": f'{values["_start"]} - {values["_stop"]}',
+                        "value": values[metric_name],
+                    },
+                )
+            else:
+                if "all" not in result:
+                    result["all"] = []
+
+                result["all"].append(
+                    {
+                        "range": f'{values["_start"]} - {values["_stop"]}',
+                        "value": values[metric_name],
+                    },
+                )
+
+    result = [{"group_key": key, "data": value} for key, value in result.items()]
     return result
 
 
@@ -168,13 +186,17 @@ def calculate_metrics_from_bucket(
     interval: str,
     metric_name: str,
     agg: str,
+    group_by: Union[str, None] = None,
 ) -> List[Point]:
     query = build_influxdb_query(bucket=bucket, parameters=parameters)
+
+    if group_by:
+        query += f' |> group(columns: ["{group_by}"])'
     query += f' |> window(every: {interval}) |> {agg}(column: "{metric_name}")'
 
     with client:
         query_api = client.query_api()
         result = query_api.query(query=query, org=organization)
 
-    result = process_metric_result(result, metric_name)
+    result = process_metric_result(result, metric_name, group_by)
     return result

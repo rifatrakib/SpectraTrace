@@ -41,14 +41,14 @@ async def verify_user_access(
 
 
 def log_retrieval_query_parameters(
-    category: str = Query(),
-    app: str = Query(),
-    env: Union[str, None] = Query(default=None),
-    method: Union[str, None] = Query(default=None),
-    status: Union[str, None] = Query(default=None),
-    origin: Union[str, None] = Query(default=None),
-    start: Union[str, None] = Query(default="1d"),
-    stop: Union[str, None] = Query(default="now()"),
+    category: str = Query(title="Category", description="Category", example="http_events"),
+    app: str = Query(title="Application", description="Application", example="spectratrace_api"),
+    env: Union[str, None] = Query(default=None, title="Environment", description="Environment"),
+    method: Union[str, None] = Query(default=None, title="Method", description="Method"),
+    status: Union[str, None] = Query(default=None, title="Status", description="Status"),
+    origin: Union[str, None] = Query(default=None, title="Origin", description="Origin"),
+    start: Union[str, None] = Query(default="1d", title="Start", description="Start time"),
+    stop: Union[str, None] = Query(default="now()", title="Stop", description="Stop time"),
 ) -> AuditRetrievalRequestSchema:
     return AuditRetrievalRequestSchema(
         category=category,

@@ -10,7 +10,7 @@ from server.schemas.inc.audit import AuditRequestSchema
 def db_initialization_event(execution_time: float) -> AuditRequestSchema:
     event_data: AuditRequestSchema = get_event_template("rdbms-events")
 
-    event_data.method = "POST"
+    event_data.method = "write"
     event_data.status = "success"
     event_data.level = "info"
     event_data.event.name = "app startup"
@@ -67,7 +67,7 @@ def admin_account_create_event(
 ) -> AuditRequestSchema:
     event_data: AuditRequestSchema = get_event_template("rdbms-events")
 
-    event_data.method = "POST"
+    event_data.method = "write"
     event_data.status = "success"
     event_data.level = "info"
     event_data.event.name = "app startup"
@@ -91,7 +91,7 @@ def admin_account_create_event(
 def check_admin_account_event(execution_time: float) -> AuditRequestSchema:
     event_data: AuditRequestSchema = get_event_template("rdbms-events")
 
-    event_data.method = "GET"
+    event_data.method = "read"
     event_data.status = "success"
     event_data.level = "info"
     event_data.event.name = "app startup"

@@ -52,9 +52,10 @@ async def log_audit_event(
     response_model=List[AuditResponseSchema],
 )
 async def read_logs(
-    parameters: AuditRetrievalRequestSchema = Depends(log_retrieval_query_parameters),
     current_user: TokenUser = Depends(is_user_active),
     influx_client: InfluxDBClient = Depends(get_influxdb_client),
+    parameters: AuditRetrievalRequestSchema = Depends(log_retrieval_query_parameters),
+    page: int = Query(default=1, description="Page number", example=1),
 ):
     try:
         data = read_points_from_bucket(
@@ -62,6 +63,7 @@ async def read_logs(
             organization=settings.INFLUXDB_ORG,
             bucket=current_user.username,
             parameters=parameters,
+            offset=(page - 1) * 50,
         )
         return data
     except HTTPException as e:
@@ -100,8 +102,9 @@ async def calculate_metric(
     influx_client: InfluxDBClient = Depends(get_influxdb_client),
     parameters: AuditRetrievalRequestSchema = Depends(log_retrieval_query_parameters),
     interval: str = Query(default="1m", description="Interval to calculate the metric"),
-    metric_name: str = Path(..., description="Name of the metric to be calculated"),
-    agg: str = Query(default="mean", description="Aggregation function to be used"),
+    metric_name: str = Path(..., description="Name of the metric to be calculated", example="cpu_usage"),
+    agg: str = Query(default="mean", description="Aggregation function to be used", example="sum"),
+    group_by: Union[str, None] = Query(default=None, description="Field to group by", example="status"),
 ):
     try:
         data = calculate_metrics_from_bucket(
@@ -112,6 +115,7 @@ async def calculate_metric(
             interval=interval,
             metric_name=metric_name,
             agg=agg,
+            group_by=group_by,
         )
         return data
     except HTTPException as e:

@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 from pydantic import Field
 
@@ -83,7 +83,7 @@ class AuditResponseSchema(BaseResponseSchema):
         }
 
 
-class MetricResponseSchema(BaseResponseSchema):
+class MetricSchema(BaseResponseSchema):
     range: str = Field(title="Range", description="Range of the metric")
     value: float = Field(title="Value", description="Value of the metric")
 
@@ -92,5 +92,23 @@ class MetricResponseSchema(BaseResponseSchema):
             "example": {
                 "range": "2023-06-11 00:00:00+00:00 - 2023-06-11 00:00:05+00:00",
                 "value": 0.5,
+            },
+        }
+
+
+class MetricResponseSchema(BaseResponseSchema):
+    group_key: str = Field(title="Group Key", description="Group key of the metric")
+    data: List[MetricSchema] = Field(title="Data", description="Data of the metric")
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "group_key": "value",
+                "data": [
+                    {
+                        "range": "2023-06-11 00:00:00+00:00 - 2023-06-11 00:00:05+00:00",
+                        "value": 0.5,
+                    },
+                ],
             },
         }
