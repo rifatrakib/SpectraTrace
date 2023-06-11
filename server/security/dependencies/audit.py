@@ -41,9 +41,9 @@ async def verify_user_access(
 
 
 def log_retrieval_query_parameters(
+    category: str = Query(),
     app: str = Query(),
-    env: str = Query(),
-    category: Union[str, None] = Query(default=None),
+    env: Union[str, None] = Query(default=None),
     method: Union[str, None] = Query(default=None),
     status: Union[str, None] = Query(default=None),
     origin: Union[str, None] = Query(default=None),

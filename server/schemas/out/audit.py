@@ -81,3 +81,16 @@ class AuditResponseSchema(BaseResponseSchema):
                 "timestamp": "2021-01-01T00:00:00.000Z",
             },
         }
+
+
+class MetricResponseSchema(BaseResponseSchema):
+    range: str = Field(title="Range", description="Range of the metric")
+    value: float = Field(title="Value", description="Value of the metric")
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "range": "2023-06-11 00:00:00+00:00 - 2023-06-11 00:00:05+00:00",
+                "value": 0.5,
+            },
+        }

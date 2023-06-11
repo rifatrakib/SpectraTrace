@@ -79,19 +79,19 @@ def proccess_points(tables: List[FluxTable]):
     return result
 
 
-def read_points_from_bucket(
-    client: InfluxDBClient,
-    organization: str,
+def build_influxdb_query(
     bucket: str,
     parameters: AuditRetrievalRequestSchema,
-) -> List[Point]:
+):
     query = f'from(bucket: "{bucket}") |> range(start: {parameters.start}, stop: {parameters.stop})'
 
     if parameters.category:
         query += f'|> filter(fn: (r) => r["_measurement"] == "{parameters.category}")'
 
     query += f' |> filter(fn: (r) => r["application"] == "{parameters.app}")'
-    query += f' |> filter(fn: (r) => r["environment"] == "{parameters.env}")'
+    if parameters.env:
+        query += f' |> filter(fn: (r) => r["environment"] == "{parameters.env}")'
+
     query += ' |> pivot(rowKey:["_time"], columnKey:["_field"], valueColumn:"_value")'
 
     if parameters.method:
@@ -100,6 +100,17 @@ def read_points_from_bucket(
         query += f' |> filter(fn: (r) => r["status"] == "{parameters.status}")'
     if parameters.origin:
         query += f' |> filter(fn: (r) => r["actor_origin"] == "{parameters.origin}")'
+
+    return query
+
+
+def read_points_from_bucket(
+    client: InfluxDBClient,
+    organization: str,
+    bucket: str,
+    parameters: AuditRetrievalRequestSchema,
+) -> List[Point]:
+    query = build_influxdb_query(bucket=bucket, parameters=parameters)
 
     with client:
         query_api = client.query_api()
@@ -131,4 +142,39 @@ def read_list_of_available_metrics(
     invariant_fields = get_invariant_fields()
     metrics = list(filter(lambda x: x not in invariant_fields, metrics))
 
-    return metrics
+    return metrics + ["affected_resources", "event_duration", "latency", "cpu_usage", "memory_usage"]
+
+
+def process_metric_result(tables: List[FluxTable], metric_name: str):
+    result = []
+    for table in tables:
+        for record in table.records:
+            values = record.values
+            result.append(
+                {
+                    "range": f'{values["_start"]} - {values["_stop"]}',
+                    "value": values[metric_name],
+                },
+            )
+
+    return result
+
+
+def calculate_metrics_from_bucket(
+    client: InfluxDBClient,
+    organization: str,
+    bucket: str,
+    parameters: AuditRetrievalRequestSchema,
+    interval: str,
+    metric_name: str,
+    agg: str,
+) -> List[Point]:
+    query = build_influxdb_query(bucket=bucket, parameters=parameters)
+    query += f' |> window(every: {interval}) |> {agg}(column: "{metric_name}")'
+
+    with client:
+        query_api = client.query_api()
+        result = query_api.query(query=query, org=organization)
+
+    result = process_metric_result(result, metric_name)
+    return result

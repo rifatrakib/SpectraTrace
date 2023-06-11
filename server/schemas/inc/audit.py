@@ -135,9 +135,9 @@ class AuditSchema(AuditRequestSchema):
 
 
 class AuditRetrievalRequestSchema(BaseRequestSchema):
+    category: str = Field()
     app: str = Field()
-    env: str = Field()
-    category: Union[str, None] = Field(default=None)
+    env: Union[str, None] = Field(default=None)
     method: Union[str, None] = Field(default=None)
     status: Union[str, None] = Field(default=None)
     origin: Union[str, None] = Field(default=None)
