@@ -223,3 +223,40 @@ def calculate_metrics_from_bucket(
 
     result = process_metric_result(result, metric_name, group_by)
     return result
+
+
+def process_metric_count(tables: List[FluxTable], metric_name: str):
+    result = {}
+    for table in tables:
+        for record in table.records:
+            values = record.values
+            metric_value = values[metric_name]
+            key = f'{values["_start"]} - {values["_stop"]}'
+
+            if key not in result:
+                result[key] = {}
+
+            result[key][metric_value] = result[key].get(metric_value, 0) + 1
+
+    result = [{"range": key, "data": value} for key, value in result.items()]
+    return result
+
+
+def calculate_metrics_count_from_bucket(
+    client: InfluxDBClient,
+    organization: str,
+    bucket: str,
+    parameters: AuditRetrievalRequestSchema,
+    interval: str,
+    metric_name: str,
+) -> List[Point]:
+    query = build_influxdb_query(bucket=bucket, parameters=parameters)
+    query += f' |> group(columns: ["{metric_name}"]) |> window(every: {interval})'
+
+    print(query)
+    with client:
+        query_api = client.query_api()
+        result = query_api.query(query=query, org=organization)
+
+    result = process_metric_count(result, metric_name)
+    return result

@@ -5,6 +5,7 @@ from influxdb_client import InfluxDBClient
 
 from server.config.factory import settings
 from server.database.audit.points import (
+    calculate_metrics_count_from_bucket,
     calculate_metrics_from_bucket,
     read_event_trail,
     read_list_of_available_metrics,
@@ -12,7 +13,7 @@ from server.database.audit.points import (
 )
 from server.models.users import UserAccount
 from server.schemas.inc.audit import AuditRequestSchema, AuditRetrievalRequestSchema
-from server.schemas.out.audit import AuditResponseSchema, MetricResponseSchema
+from server.schemas.out.audit import AuditResponseSchema, MetricCountResponseSchema, MetricResponseSchema
 from server.schemas.out.auth import TokenUser
 from server.security.dependencies.audit import log_retrieval_query_parameters, verify_user_access
 from server.security.dependencies.auth import is_user_active
@@ -140,6 +141,33 @@ async def calculate_metric(
             metric_name=metric_name,
             agg=agg,
             group_by=group_by,
+        )
+        return data
+    except HTTPException as e:
+        raise e
+
+
+@router.get(
+    "/metrics/{metric_name}/count",
+    summary="Calculate a metric",
+    description="Calculate a metric from the audit log",
+    response_model=List[MetricCountResponseSchema],
+)
+async def calculate_metric_count(
+    current_user: TokenUser = Depends(is_user_active),
+    influx_client: InfluxDBClient = Depends(get_influxdb_client),
+    parameters: AuditRetrievalRequestSchema = Depends(log_retrieval_query_parameters),
+    interval: str = Query(default="1m", description="Interval to calculate the metric"),
+    metric_name: str = Path(..., description="Name of the metric to be calculated", example="status"),
+):
+    try:
+        data = calculate_metrics_count_from_bucket(
+            client=influx_client,
+            organization=settings.INFLUXDB_ORG,
+            bucket=current_user.username,
+            parameters=parameters,
+            interval=interval,
+            metric_name=metric_name,
         )
         return data
     except HTTPException as e:

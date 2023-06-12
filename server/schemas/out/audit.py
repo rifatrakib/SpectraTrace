@@ -112,3 +112,19 @@ class MetricResponseSchema(BaseResponseSchema):
                 ],
             },
         }
+
+
+class MetricCountResponseSchema(BaseResponseSchema):
+    range: str = Field(title="Range", description="Range of the metric")
+    data: Dict[str, int] = Field(title="Data", description="Data of the metric")
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "range": "2023-06-11 00:00:00+00:00 - 2023-06-11 00:00:05+00:00",
+                "data": {
+                    "type1": 1,
+                    "type2": 2,
+                },
+            },
+        }
