@@ -122,6 +122,29 @@ def read_points_from_bucket(
     return result
 
 
+def read_event_trail(
+    client: InfluxDBClient,
+    organization: str,
+    bucket: str,
+    event_id: str,
+):
+    query = (
+        f'from(bucket: "{bucket}")'
+        " |> range(start: 0)"
+        ' |> pivot(rowKey:["_time"], columnKey:["_field"], valueColumn:"_value")'
+        f' |> filter(fn: (r) => r["event_id"] == "{event_id}")'
+        ' |> sort(columns: ["_time"], desc: true)'
+    )
+
+    print(query)
+    with client:
+        query_api = client.query_api()
+        result = query_api.query(query=query, org=organization)
+
+    result = proccess_points(result)
+    return result
+
+
 def read_list_of_available_metrics(
     client: InfluxDBClient,
     organization: str,

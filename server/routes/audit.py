@@ -6,6 +6,7 @@ from influxdb_client import InfluxDBClient
 from server.config.factory import settings
 from server.database.audit.points import (
     calculate_metrics_from_bucket,
+    read_event_trail,
     read_list_of_available_metrics,
     read_points_from_bucket,
 )
@@ -64,6 +65,29 @@ async def read_logs(
             bucket=current_user.username,
             parameters=parameters,
             offset=(page - 1) * 50,
+        )
+        return data
+    except HTTPException as e:
+        raise e
+
+
+@router.get(
+    "/log/{event_id}",
+    summary="Read log audit events",
+    description="Read audit events from the audit log",
+    response_model=List[AuditResponseSchema],
+)
+async def read_single_event(
+    current_user: TokenUser = Depends(is_user_active),
+    influx_client: InfluxDBClient = Depends(get_influxdb_client),
+    event_id: str = Path(..., description="Event ID", example="1234567890"),
+):
+    try:
+        data = read_event_trail(
+            client=influx_client,
+            organization=settings.INFLUXDB_ORG,
+            bucket=current_user.username,
+            event_id=event_id,
         )
         return data
     except HTTPException as e:
