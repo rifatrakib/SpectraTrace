@@ -23,4 +23,4 @@ def publish_task(admin: UserAccount, bucket: str, event_data: List[AuditRequestS
         "bucket": bucket,
         "data": data,
     }
-    celery_app.send_task("tasks.log_event", kwargs=params)
+    celery_app.send_task("tasks.log_event", expires=300, kwargs=params)
