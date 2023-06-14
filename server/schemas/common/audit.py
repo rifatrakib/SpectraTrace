@@ -39,7 +39,7 @@ class TagSchema(BaseRequestSchema):
 class EventSchema(BaseRequestSchema):
     name: str = Field(title="Event Name", description="Name of the event that was performed")
     type: str = Field(title="Event Type", description="Type of the event that was performed")
-    stage: int = Field(title="Stage", description="Stage of the event in a sequence of events")
+    stage: int = Field(default=1, title="Stage", description="Stage of the event in a sequence of events")
     total_duration: Union[float, None] = Field(
         default=None, title="Total Duration", description="Duration of the event in milliseconds", gt=0
     )
