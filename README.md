@@ -3,16 +3,16 @@ SpectraTrace is an audit log service with the ability to store, trace, and analy
 
 To run the application, please install [docker](https://www.docker.com/) and [docker-compose](https://docs.docker.com/compose/) on your machine. Then follow one of the following steps to run the application:
 
-1. Using the custom CLI:
+1. Using docker compose (single command to deploy on Ubuntu):
+```
+docker-compose up --build
+```
+
+2. Using the custom CLI:
 ```
 virtualenv venv
 pip install typer
 python manage.py start --build
-```
-
-2. Using docker compose:
-```
-docker-compose up --build
 ```
 
 **Please make sure that you are at the same directory where the `docker-compose.yaml` file is located. (For both of the above approaches)**
